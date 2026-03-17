@@ -1,0 +1,20 @@
+.page {
+    min-width: 1200px;
+    padding: 32px 20px;
+    margin: auto;
+}
+
+.grid{
+
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 24px;
+
+}
+

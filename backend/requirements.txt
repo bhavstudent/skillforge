@@ -1,0 +1,32 @@
+# SkillForge - Backend Dependencies
+# Clean version for deployment (~50MB install instead of ~2GB)
+
+# --- Core API ---
+fastapi==0.127.0
+uvicorn==0.40.0
+starlette==0.50.0
+
+# --- Database ---
+sqlalchemy
+
+# --- Auth & Security ---
+passlib[bcrypt]
+python-jose[cryptography]
+python-dotenv==1.2.1
+
+# --- AI (Groq API - no local models needed) ---
+groq==0.4.2
+
+# --- Data validation ---
+pydantic==2.11.7
+pydantic[email]
+
+# --- PDF Generation ---
+reportlab==4.4.4
+
+# --- HTTP ---
+httpx==0.28.1
+requests==2.32.4
+
+# --- File uploads ---
+python-multipart

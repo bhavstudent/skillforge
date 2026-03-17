@@ -1,0 +1,176 @@
+/* =========================================
+   SIDEBAR - Consistent Across All Pages
+   ========================================= */
+
+.sidebar {
+  /* Grid Position */
+  grid-column: 1/2;
+  height: calc(100vh - 70px);
+  /* Glass Background */
+  background: rgba(10, 10, 15, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 123, 0, 0.15);
+  
+  display: flex;
+  flex-direction: column;
+  padding: 20px 12px;
+  gap: 8px;
+  
+  overflow: visible;
+  transition: width 0.3s ease;
+  z-index: 100;
+}
+
+/* Collapsed State */
+.sidebar.collapsed {
+  width: 70px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+/* =========================================
+   SIDEBAR ITEMS
+   ========================================= */
+.side-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  color: #a0a0b0;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.side-item:hover {
+  background: rgba(255, 123, 0, 0.12);
+  color: #ff7b00;
+  border-color: rgba(255, 123, 0, 0.25);
+  transform: translateX(4px);
+}
+
+.side-item.active {
+  background: linear-gradient(135deg, rgba(255, 123, 0, 0.2), rgba(255, 123, 0, 0.1));
+  color: #ff7b00;
+  border-color: rgba(255, 123, 0, 0.4);
+  box-shadow: 0 0 20px rgba(255, 123, 0, 0.25);
+  font-weight: 600;
+}
+
+/* Icon */
+.sidebar-icon {
+  font-size: 20px;
+  min-width: 24px;
+  width: 24px;
+  height: 24px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+.sidebar-icon svg {
+  width: 20px !important;
+  height: 20px !important;
+  stroke: currentColor !important;
+  stroke-width: 2 !important;
+  display: block !important;
+}
+
+/* Text */
+.sidebar-text {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+/* Hide text when collapsed */
+.sidebar.collapsed .sidebar-text {
+  display: none;
+}
+
+/* =========================================
+   TOOLTIP (Popup on Hover when Collapsed)
+   ========================================= */
+.tooltip {
+  position: fixed;
+  left: 85px;
+  background: rgba(20, 20, 25, 0.98);
+  backdrop-filter: blur(20px);
+  color: #ffffff;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-10px);
+  transition: all 0.2s ease;
+  z-index: 9999;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Show tooltip on hover when collapsed */
+.sidebar.collapsed .side-item:hover .tooltip {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Hide tooltip when sidebar is expanded */
+.sidebar:not(.collapsed) .tooltip {
+  display: none;
+}
+
+/* =========================================
+   DIVIDER
+   ========================================= */
+.sidebar-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 12px 0;
+}
+
+/* =========================================
+   RESPONSIVE
+   ========================================= */
+@media (max-width: 900px) {
+  .sidebar {
+    width: 70px;
+  }
+  .sidebar-text {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .sidebar {
+    /* Optional: Hide on mobile, use hamburger menu */
+  }
+}
+
+/* =========================================
+   ACCESSIBILITY
+   ========================================= */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus visible for keyboard navigation */
+.side-item:focus-visible {
+  outline: 2px solid #ff7b00;
+  outline-offset: 2px;
+}
