@@ -1,19 +1,19 @@
-# FastAPI + Core
+# FastAPI Core (pre-built wheels)
 fastapi==0.109.2
 uvicorn[standard]==0.27.1
 pydantic==2.6.1
 pydantic-settings==2.1.0
 
-# Database
+# Database (pure Python)
 sqlalchemy==2.0.25
 aiosqlite==0.19.0
 
-# Auth
+# Auth (pre-built wheels)
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
 
-# AI Clients
+# AI Clients (pre-built wheels)
 groq==0.4.2
 openai==1.12.0
 httpx==0.26.0
