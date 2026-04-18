@@ -22,6 +22,3 @@ httpx==0.26.0
 reportlab==4.0.9
 python-dotenv==1.0.1
 jinja2==3.1.3
-
-# CORS + Middleware
-fastapi.middleware.cors
