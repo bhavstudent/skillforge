@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, User, ArrowRight, Eye, EyeOff, CheckCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import toast from "react-hot-toast";
+
 import "../styles/login.css";
 
 export default function Login() {
@@ -42,16 +44,16 @@ export default function Login() {
     
     if (isSignup) {
       if(password !== confirmPassword) {
-        alert("Passwords do not match");
+        toast.error("Passwords do not match");
         return;
       }
 
       if (password.length < 6) {
-        alert("Password must be at least 6 characters");
+        toast.error("Password must be at least 6 characters");
         return;
       }
       if(!agreeterms) {
-        alert("Please agree to terms & Privacy Policy");
+        toast.error("Please agree to terms & Privacy Policy");
         return;
       }
 
@@ -62,7 +64,7 @@ export default function Login() {
       }
     } else {
       if(!email || !password) {
-        alert("Please enter email and password");
+        toast.error("Please enter email and password");
         return
       }
 
@@ -273,7 +275,7 @@ export default function Login() {
             <button 
                 className="social-btn"
                 type="button"
-                onClick={() => alert("Google login coming soon!")}
+                onClick={() => toast("Google login coming soon!")}
                 disabled = {loading}
             >
               <img src="https://www.google.com/favicon.ico" alt="G" />
@@ -283,7 +285,7 @@ export default function Login() {
             <button 
                 className="social-btn"
                 type="button"
-                onClick={() => alert("GitHub login coming soon!")}
+                onClick={() => toast("GitHub login coming soon!")}
                 disabled = {loading}
             >
               <img src="https://github.com/favicon.ico" alt="G" />
@@ -296,14 +298,14 @@ export default function Login() {
             <button 
                 type="button" 
                 className="link-btn"
-                onClick={() => alert("Forgot Password flow")}
+                onClick={() => toast("Forgot Password flow")}
             >
                 Forgot Password?
             </button>
             <button 
                 type="button" 
                 className="link-btn"
-                onClick={() => alert("Help Center")}
+                onClick={() => toast("Help Center")}
             >
                 Need Help?
             </button>

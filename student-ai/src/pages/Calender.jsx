@@ -1,9 +1,7 @@
 import { useContext } from "react";
-import { UserContext } from "../context/UserContext";
 import "../styles/calendar.css"
 
 export default function Calender() {
-    const { user } = useContext(UserContext);
 
     if(!user) {
         return (

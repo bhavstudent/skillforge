@@ -1,153 +1,273 @@
-# backend/routers/ai.py
-# ✅ AI Explanation + Career Analysis + PDF Generation
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from groq import Groq
-from pydantic import BaseModel
-from typing import Optional
+from typing import Dict, Any
 from fastapi.responses import FileResponse
-from dotenv import load_dotenv
+from starlette.background import BackgroundTask
 import json
 import os
+import re
 
-from backend.schemas import AIQuestionRequest
+from backend.schemas import AIQuestionRequest, ExplainRequest
 from backend.database import get_db
 from backend.models import Question
 from backend.pdf_service import generate_pdf
-
-# Load environment variables
-load_dotenv()
+from backend.ai_clients import groq_client, openrouter_client
 
 router = APIRouter(prefix='/ai', tags=["AI"])
 
-# ✅ Initialize Groq client ONCE at module level
-groq_client = None
-if os.getenv("GROQ_API_KEY"):
-    groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-# ============ Request Models ============
-class ExplainQuestionRequest(BaseModel):
-    question_id: int
-    marks: int = 4
-    language: str = "English"
+# ============ HELPER: Extract JSON ============
+def extract_json(text: str) -> Dict[str, Any]:
+    if not text:
+        return {}
 
-class CareerAnalysisRequest(BaseModel):
-    languages: list
-    total_solved: int
-    streak: int
-    topics: list = []
+    def sanitize(s: str) -> str:
+        result = []
+        in_string = False
+        escape_next = False
+        i = 0
+        while i < len(s):
+            ch = s[i]
+            if escape_next:
+                result.append(ch)
+                escape_next = False
+                i += 1
+                continue
+            if ch == '\\' and in_string:
+                result.append(ch)
+                escape_next = True
+                i += 1
+                continue
+            if ch == '"':
+                in_string = not in_string
+                result.append(ch)
+                i += 1
+                continue
+            if in_string and ch in ('\n', '\r', '\t'):
+                result.append(' ')
+                i += 1
+                continue
+            result.append(ch)
+            i += 1
+        return ''.join(result)
+
+    # 1. Direct parse
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    # 2. Sanitize + retry
+    try:
+        return json.loads(sanitize(text))
+    except json.JSONDecodeError:
+        pass
+
+    # 3. Strip markdown fences
+    clean_text = text.strip()
+    if clean_text.startswith("```"):
+        clean_text = re.sub(r'^```(?:json)?\s*', '', clean_text, flags=re.MULTILINE)
+        clean_text = re.sub(r'\s*```$', '', clean_text, flags=re.MULTILINE)
+        clean_text = clean_text.strip()
+
+    try:
+        return json.loads(sanitize(clean_text))
+    except json.JSONDecodeError:
+        pass
+
+    # 4. Find balanced { } block
+    def find_balanced_json(s: str):
+        start = s.find('{')
+        if start == -1:
+            return None
+        depth = 0
+        in_str = False
+        esc = False
+        for i, char in enumerate(s[start:], start):
+            if esc:
+                esc = False
+                continue
+            if char == '\\' and in_str:
+                esc = True
+                continue
+            if char == '"':
+                in_str = not in_str
+            if not in_str:
+                if char == '{':
+                    depth += 1
+                elif char == '}':
+                    depth -= 1
+                    if depth == 0:
+                        return s[start:i+1]
+        return None
+
+    json_str = find_balanced_json(clean_text)
+    if json_str:
+        repaired = re.sub(r',\s*}', '}', json_str)
+        repaired = re.sub(r',\s*]', ']', repaired)
+        try:
+            return json.loads(sanitize(repaired))
+        except json.JSONDecodeError as e:
+            print(f"JSON repair failed: {e}")
+            print(f"Raw snippet: {json_str[:200]}...")
+
+    # 5. Safe fallback
+    print(f"⚠️ JSON Extraction Failed for text: {text[:200]}...")
+    return {
+        "concept_overview": text[:500] + "..." if len(text) > 500 else text,
+        "visual_diagram": "",
+        "step_by_step": ["Explanation received but formatting failed — try again!"],
+        "code_example": "",
+        "key_points": [],
+        "common_mistakes": [],
+        "practice_tip": "Check backend logs for parsing details.",
+        "summary": "⚠️ Parsing issue — but here is the raw response!"
+    }
+
+
+# ============ AI Ask Endpoint ============
+@router.post("/ask")
+async def get_answer(data: AIQuestionRequest):
+    if not groq_client:
+        raise HTTPException(status_code=503, detail="AI service not configured")
+
+    system_message = {
+        "role": "system",
+        "content": """You are Forge — SkillForge's AI best friend 🤖❤️
+You are NOT a tutor. You are the user's personal coding friend who genuinely cares.
+- Talk exactly like a friend texting — casual, warm, real
+- Use casual language: gonna, wanna, ngl, tbh, fr
+- Use emojis naturally like a real person texting
+- Remember everything said in this conversation and refer back to it
+- End with genuine encouragement
+- NEVER sound robotic or formal
+- NEVER say "Certainly!" or "Of course!"
+"""
+    }
+
+    conversation = [system_message]
+    for msg in data.history[:-1]:
+        conversation.append({"role": msg.role, "content": msg.content})
+    conversation.append({"role": "user", "content": data.question})
+
+    try:
+        response = groq_client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=conversation,
+            temperature=0.9,
+            max_tokens=1000
+        )
+        return {
+            "question": data.question,
+            "marks": data.marks,
+            "answer": response.choices[0].message.content
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI generation failed: {str(e)}")
+
 
 # ============ AI Explanation Endpoint ============
 @router.post("/explain-question")
 async def explain_question(
-    question_id: int,
-    marks: int = 4,
-    language: str = "English",
+    data: ExplainRequest,
     db: Session = Depends(get_db)
 ):
-    """
-    Generate AI explanation with diagram suggestions and simple language
-    
-    Returns structured JSON with:
-    - concept_overview
-    - visual_diagram (ASCII/text-based)
-    - step_by_step
-    - code_example
-    - key_points
-    - common_mistakes
-    - practice_tip
-    - summary
-    """
-    
-    # ✅ Check if Groq is configured
-    if not groq_client:
-        raise HTTPException(
-            status_code=503, 
-            detail="AI service not configured. Add GROQ_API_KEY to .env"
-        )
-    
-    # ✅ Fetch question from database
-    question = db.query(Question).filter(Question.id == question_id).first()
+    # ✅ Fetch question FIRST
+    question = db.query(Question).filter(Question.id == data.question_id).first()
     if not question:
         raise HTTPException(status_code=404, detail="Question not found")
-    
-    # ✅ Build enhanced prompt for simple, visual explanations
-    prompt = f"""You are an expert computer science tutor specializing in making complex topics SIMPLE for students.
 
-📋 QUESTION DETAILS:
-- Text: {question.question_text}
-- Subject: {question.subject}
-- Topic: {question.topic}
-- University: {question.university}
-- Year: {question.year}
-- Difficulty: {question.difficulty}
-- Expected Marks: {marks}
-- Explanation Language: {language}
+    prompt = f"""You are SkillForge AI explaining concepts to students.
 
-🎯 YOUR TASK:
-Generate a BEGINNER-FRIENDLY explanation that anyone can understand. Use simple words, real-life analogies, and visual diagrams.
+Topic: {question.question_text}
+Subject: {question.subject}
+Difficulty: {question.difficulty}
+Marks: {data.marks}
 
-📝 RESPONSE FORMAT (MUST be valid JSON with this exact structure):
+STRICT RULES:
+- Output ONLY a JSON object, nothing else
+- Use ONLY double quotes for strings
+- Write "it is" not "it's" — NO apostrophes anywhere
+- Write "do not" not "don't" — NO contractions
+- No newlines inside string values
+- Use \\n for line breaks in code examples
+- No trailing commas
+
+Output exactly this JSON:
 {{
-    "concept_overview": "2-3 simple sentences explaining the core idea in plain {language}",
-    "visual_diagram": "ASCII art or text-based diagram to visualize the concept (use characters like →, ↓, ┌─┐, etc.)",
-    "step_by_step": [
-        "Step 1: First thing to do...",
-        "Step 2: Second thing...",
-        "Step 3: Third thing..."
-    ],
-    "code_example": "```python\\n# Commented code example\\ndef example():\\n    pass\\n```",
-    "key_points": [
-        "Important point 1",
-        "Important point 2",
-        "Important point 3"
-    ],
-    "common_mistakes": [
-        "Mistake 1 and how to avoid it",
-        "Mistake 2 and how to avoid it"
-    ],
-    "practice_tip": "One actionable tip to practice this concept",
-    "summary": "One-line recap in simple words"
-}}
+    "concept_overview": "2-3 sentences with a fun analogy. No apostrophes.",
+    "visual_diagram": "ASCII diagram using arrows and boxes on one line",
+    "step_by_step": ["Step 1: detail here", "Step 2: detail here", "Step 3: detail here"],
+    "code_example": "short well commented code using \\n for line breaks",
+    "key_points": ["point 1", "point 2", "point 3"],
+    "common_mistakes": ["mistake 1 and how to avoid it", "mistake 2 and how to avoid it"],
+    "practice_tip": "one actionable practice tip",
+    "summary": "one line friendly recap with emoji"
+}}"""
 
-💡 GUIDELINES:
-- Use SIMPLE words (avoid jargon where possible)
-- Add analogies from real life (e.g., "Think of a variable like a box...")
-- Include a text-based diagram/visualization using ASCII characters
-- Keep code examples short (5-10 lines) and well-commented
-- Explain WHY, not just HOW
-- Tone: Friendly, encouraging, like a helpful senior student
-- For {marks} marks: Keep it concise but complete
+    # ---- Try OpenRouter first (best JSON) ----
+    if openrouter_client:
+        try:
+            response = openrouter_client.chat.completions.create(
+                model="meta-llama/llama-3.3-70b-instruct:free",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a JSON API. Output only valid JSON. No apostrophes. No real newlines inside strings. Use \\n for code line breaks."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                temperature=0.2,
+                max_tokens=1500,
+                response_format={"type": "json_object"}
+            )
 
-Respond with VALID JSON ONLY (no markdown code blocks around it)."""
+            raw = response.choices[0].message.content.strip()
+            print(f"✅ OpenRouter raw: {raw[:200]}")
+            explanation_data = json.loads(raw)
+
+            return {
+                "question_id": data.question_id,
+                "explanation": explanation_data,
+                "model": "llama-3.3-70b",
+                "marks": data.marks,
+                "language": data.language
+            }
+
+        except Exception as e:
+            print(f"OpenRouter failed, falling back to Groq: {e}")
+
+    # ---- Fallback to Groq ----
+    if not groq_client:
+        raise HTTPException(status_code=503, detail="No AI service configured")
 
     try:
-        # ✅ Call Groq API with Llama 3.1
         response = groq_client.chat.completions.create(
-            model="llama-3.1-8b-instant",  # Fast, capable, free tier
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.3,  # Lower = more focused, less creative
-            max_tokens=2000,  # Enough for detailed explanation
-            top_p=0.95
+            model="llama-3.1-8b-instant",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a JSON API. Output only valid JSON. No apostrophes. Use \\n for newlines in code."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            temperature=0.2,
+            max_tokens=1500
         )
-        
-        # ✅ Parse JSON response
-        explanation_text = response.choices[0].message.content.strip()
-        
-        # Remove markdown code blocks if present
-        if explanation_text.startswith("```json"):
-            explanation_text = explanation_text.replace("```json", "").replace("```", "").strip()
-        elif explanation_text.startswith("```"):
-            explanation_text = explanation_text.replace("```", "").strip()
-        
-        # Parse JSON
-        try:
-            explanation_data = json.loads(explanation_text)
-        except json.JSONDecodeError:
-            # Fallback if JSON parsing fails
+
+        raw = response.choices[0].message.content.strip()
+        print(f"Groq raw: {raw[:200]}")
+        explanation_data = extract_json(raw)
+
+        if not explanation_data or "concept_overview" not in explanation_data:
             explanation_data = {
-                "concept_overview": explanation_text,
+                "concept_overview": raw,
                 "visual_diagram": "",
                 "step_by_step": [],
                 "code_example": "",
@@ -156,272 +276,119 @@ Respond with VALID JSON ONLY (no markdown code blocks around it)."""
                 "practice_tip": "",
                 "summary": ""
             }
-        
+
         return {
-            "question_id": question_id,
+            "question_id": data.question_id,
             "explanation": explanation_data,
             "model": "llama-3.1-8b-instant",
-            "marks": marks,
-            "language": language
-        }
-        
-    except Exception as e:
-        print(f"Groq API error: {e}")
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Failed to generate explanation: {str(e)}"
-        )
-
-# ============ AI Ask Endpoint (Existing) ============
-@router.post("/ask")
-async def get_answer(data: AIQuestionRequest):
-    """
-    Simple Q&A endpoint for quick questions
-    """
-    if not groq_client:
-        raise HTTPException(status_code=503, detail="AI service not configured")
-    
-    try:
-        prompt = f"""You are an expert academic tutor. Answer this question clearly for a {data.marks}-mark exam answer.
-
-Question: {data.question}
-
-Provide a structured answer with:
-1. Concept overview
-2. Key points
-3. Example if applicable
-
-Keep it concise for {data.marks} marks."""
-
-        response = groq_client.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.3,
-            max_tokens=1000
-        )
-        
-        return {
-            "question": data.question,
             "marks": data.marks,
-            "answer": response.choices[0].message.content
+            "language": data.language
         }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"AI generation failed: {str(e)}")
 
-# ============ PDF Generation Endpoint (Existing) ============
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI explanation failed: {str(e)}")
+
+
+# ============ PDF Generation Endpoint ============
 @router.post("/ask/pdf")
 async def ask_ai_pdf(data: AIQuestionRequest):
-    """
-    Generate answer and return as PDF
-    """
     if not groq_client:
         raise HTTPException(status_code=503, detail="AI service not configured")
-    
+
     try:
-        # Generate answer
-        prompt = f"""Answer this question for a {data.marks}-mark exam: {data.question}"""
-        
+        prompt = f"""You are SkillForge AI — a friendly coding buddy 🤖
+Answer this {data.marks}-mark question in a warm, student-friendly way with simple words and a real-life analogy:
+
+{data.question}
+
+End with an encouraging line!"""
+
         response = groq_client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.3,
+            temperature=0.6,
             max_tokens=1000
         )
-        
+
         answer = response.choices[0].message.content
-        
-        # Generate PDF
         pdf_file = generate_pdf(data.question, answer, data.marks)
-        
+
+        def cleanup():
+            if os.path.exists(pdf_file):
+                os.remove(pdf_file)
+
         return FileResponse(
             pdf_file,
-            filename=f"answer_{data.marks}marks.pdf",
-            media_type="application/pdf"
+            filename=f"skillforge_answer_{data.marks}marks.pdf",
+            media_type="application/pdf",
+            background=BackgroundTask(cleanup)
         )
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"PDF generation failed: {str(e)}")
 
-# ============ Career Analysis Endpoint (Enhanced) ============
+
+# ============ Career Analysis Endpoint ============
 @router.post("/career-analysis")
 async def analyze_career_path(data: dict):
-    """
-    Analyzes user's learning pattern and suggests career paths
-    
-    data example:
-    {
-        "languages": [
-            {"name": "Python", "percentage": 75, "tasks_completed": 38},
-            {"name": "SQL", "percentage": 60, "tasks_completed": 17},
-            {"name": "JavaScript", "percentage": 40, "tasks_completed": 10}
-        ],
-        "total_solved": 186,
-        "streak": 7,
-        "topics": ["Arrays", "Strings", "Data Structures", "Algorithms"]
-    }
-    """
-    
     if not groq_client:
         raise HTTPException(status_code=503, detail="AI service not configured")
-    
-    # ✅ Build AI prompt with user's actual data
+
     languages_text = ", ".join([
-        f"{lang.get('name', 'Unknown')} ({lang.get('percentage', 0)}%)" 
+        f"{lang.get('name', 'Unknown')} ({lang.get('percentage', 0)}%)"
         for lang in data.get("languages", [])
     ])
-    
     topics_text = ", ".join(data.get("topics", []))
-    
-    prompt = f"""
-You are an AI career counselor for tech students. Analyze this student's learning pattern and provide personalized career guidance.
 
-STUDENT PROFILE:
-- Languages & Proficiency: {languages_text}
-- Total Problems Solved: {data.get('total_solved', 0)}
+    prompt = f"""You are SkillForge AI — a friendly career counselor for tech students.
+
+Student Profile:
+- Languages: {languages_text}
+- Problems Solved: {data.get('total_solved', 0)}
 - Current Streak: {data.get('streak', 0)} days
-- Topics Studied: {topics_text}
+- Topics: {topics_text}
 
-ANALYSIS REQUIREMENTS:
-1. Identify their strongest skills based on percentages and completion
-2. Match their learning pattern to suitable career paths
-3. Be specific - don't just say "Developer", say "Backend Python Developer" or "Data Analyst"
-4. Consider emerging tech trends (AI/ML, Cloud, DevOps, etc.)
-5. Be encouraging but realistic
-
-Provide JSON response with this exact structure:
+Return ONLY valid JSON. No apostrophes. No contractions. Complete the full JSON.
 {{
-    "primary_career": "Best career match (be specific)",
+    "primary_career": "Specific career title",
     "match_percentage": 85,
-    "alternative_careers": ["2-3 other suitable careers"],
-    "why_this_match": "Explain WHY their skills match this career (2-3 sentences)",
-    "strengths": ["3-5 skills they're good at"],
+    "alternative_careers": ["career 1", "career 2"],
+    "why_this_match": "2-3 encouraging sentences",
+    "strengths": ["strength 1", "strength 2", "strength 3"],
     "skill_gaps": [
-        {{
-            "skill": "Skill name",
-            "current_level": 40,
-            "required_level": 70,
-            "priority": "high/medium/low",
-            "action": "Specific action to improve"
-        }}
+        {{"skill": "name", "current_level": 40, "required_level": 70, "priority": "high", "action": "advice"}}
     ],
     "recommendations": [
-        {{
-            "title": "What to learn/do",
-            "description": "Why it's important",
-            "priority": "high/medium/low",
-            "estimated_time": "2-4 weeks"
-        }}
+        {{"title": "what to learn", "description": "why it helps", "priority": "high", "estimated_time": "2-4 weeks"}}
     ],
     "roadmap": [
-        {{
-            "step": 1,
-            "title": "Milestone",
-            "completed": true,
-            "description": "What this means"
-        }}
+        {{"step": 1, "title": "milestone", "completed": true, "description": "description"}}
     ],
-    "industry_benchmarks": {{
-        "Python": 80,
-        "DSA": 75,
-        "Projects": 3
-    }},
-    "motivation_message": "Encouraging 1-2 line message"
-}}
-
-Be specific, actionable, and personalized to THEIR learning pattern. Respond with VALID JSON only."""
+    "industry_benchmarks": {{"Python": 80, "DSA": 75, "Projects": 3}},
+    "motivation_message": "warm encouraging message with emoji"
+}}"""
 
     try:
         response = groq_client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model="llama-3.1-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
             max_tokens=2000
         )
-        
-        # Parse JSON from AI response
         insight_text = response.choices[0].message.content.strip()
-        
-        # Remove markdown code blocks if present
-        if insight_text.startswith("```json"):
-            insight_text = insight_text.replace("```json", "").replace("```", "").strip()
-        elif insight_text.startswith("```"):
-            insight_text = insight_text.replace("```", "").strip()
-        
-        insight = json.loads(insight_text)
-        
-        return insight
-        
-    except json.JSONDecodeError as e:
-        print(f"JSON parse error: {e}")
-        # Fallback if JSON parsing fails
-        return {
-            "primary_career": "Software Developer",
-            "match_percentage": 65,
-            "alternative_careers": ["Web Developer", "Data Analyst"],
-            "why_this_match": "Based on your current learning pattern and problem-solving skills.",
-            "strengths": ["Problem Solving", "Consistent Practice", "Quick Learner"],
-            "skill_gaps": [
-                {
-                    "skill": "System Design",
-                    "current_level": 40,
-                    "required_level": 70,
-                    "priority": "medium",
-                    "action": "Study microservices architecture"
-                }
-            ],
-            "recommendations": [
-                {
-                    "title": "Build a Portfolio Project",
-                    "description": "Showcase your skills to employers",
-                    "priority": "high",
-                    "estimated_time": "3-4 weeks"
-                }
-            ],
-            "roadmap": [
-                {
-                    "step": 1,
-                    "title": "Master Core Language",
-                    "completed": True,
-                    "description": "You're doing great!"
-                },
-                {
-                    "step": 2,
-                    "title": "Build Projects",
-                    "completed": False,
-                    "description": "Apply your knowledge"
-                }
-            ],
-            "industry_benchmarks": {
-                "Python": 80,
-                "DSA": 75,
-                "Projects": 3
-            },
-            "motivation_message": "You're on the right track! Keep building and learning. 🚀"
-        }
-        
+        return extract_json(insight_text)
+
     except Exception as e:
         print(f"Career analysis error: {e}")
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Career analysis failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Career analysis failed: {str(e)}")
+
 
 # ============ Health Check ============
 @router.get("/models")
 async def list_ai_models():
-    """List available AI models (for debugging)"""
     return {
-        "available_models": [
-            "llama-3.1-8b-instant",
-            "llama-3.1-70b-versatile",
-            "mixtral-8x7b-32768"
-        ],
+        "available_models": ["llama-3.1-8b-instant", "llama-3.1-70b-versatile", "llama-3.3-70b-instruct"],
         "default": "llama-3.1-8b-instant",
-        "features": [
-            "JSON output support",
-            "Diagram generation",
-            "Multi-language explanations"
-        ],
-        "status": "active" if groq_client else "not_configured"
+        "groq_status": "active" if groq_client else "not_configured",
+        "openrouter_status": "active" if openrouter_client else "not_configured"
     }

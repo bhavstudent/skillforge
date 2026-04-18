@@ -47,8 +47,8 @@ export default function RightPanel() {
 
         {view === "date" && (
           <div className="calendar-grid fade-slide">
-            {["S","M","T","W","T","F","S"].map(d => (
-              <div key={d} className="day-name">{d}</div>
+            {["S","M","T","W","T","F","S"].map((d, i) => (
+              <div key={i} className="day-name">{d}</div>
             ))}
 
             {Array(startDay).fill("").map((_, i) => <div key={i} />)}

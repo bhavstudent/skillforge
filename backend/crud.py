@@ -1,6 +1,3 @@
-# backend/crud.py
-# ✅ Boolean is_active, email check, proper role handling
-
 from backend.schemas import QuestionCreate, UserCreate
 from backend.models import Question, User
 import random

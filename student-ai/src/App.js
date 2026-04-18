@@ -11,6 +11,7 @@ import AskAI from "./pages/AskAI";
 import Profile from "./pages/Profile";
 import Practice from "./pages/Practice";
 import Progress from "./pages/Progress";
+import Interview from "./pages/Interview";
 
 
 function App() {
@@ -48,14 +49,14 @@ function App() {
       <Route path="/progress" element={ 
         <ProtectedRoute> <Progress /> </ProtectedRoute> } />
 
-      <Route path="/login" element={ 
-        <ProtectedRoute> <Login /> </ProtectedRoute> } />
+      <Route path="/interview" element={ 
+        <ProtectedRoute> <Interview /> </ProtectedRoute> } />
 
-      <Route path="/practice" element={ 
+      <Route path="/practice/:id" element={ 
         <ProtectedRoute> <Practice /> </ProtectedRoute> } />
       
       <Route path="/" element = {<Navigate to={user ? "/dashboard" : "/login"} /> } />
-      <Route path="*" element={<Navigate to= "dashboard" /> } />
+      <Route path="*" element={<Navigate to= "/dashboard" /> } />
 
     </Routes>
   );

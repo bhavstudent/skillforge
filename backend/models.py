@@ -4,8 +4,8 @@ from datetime import datetime
 
 class Question(Base):
     __tablename__ = "questions"  # ✅ DOUBLE underscore
-    
-    question_id = Column(Integer, primary_key=True, index=True)
+
+    id = Column(Integer, primary_key=True, index=True)
     question_text = Column(Text, nullable=False)
     subject = Column(String, nullable=False)
     topic = Column(String, nullable=False)

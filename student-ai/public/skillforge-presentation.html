@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkillForge — From College to Career</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --orange: #ff6b00;
+  --orange2: #ff9500;
+  --bg: #060608;
+  --glass: rgba(255,255,255,.045);
+  --border: rgba(255,255,255,.08);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  overflow-x: hidden;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 16px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(6,6,8,.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  background: linear-gradient(90deg,#fff,var(--orange));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.nav-links { display: flex; gap: 32px; }
+.nav-links a {
+  font-size: 13px;
+  color: rgba(255,255,255,.45);
+  text-decoration: none;
+  transition: color .2s;
+}
+.nav-links a:hover { color: var(--orange); }
+.nav-cta {
+  padding: 8px 20px;
+  background: linear-gradient(135deg,var(--orange),var(--orange2));
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── SECTION BASE ── */
+section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 48px 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── REVEAL ANIMATION ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity .8s ease, transform .8s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: .15s; }
+.reveal-delay-2 { transition-delay: .3s; }
+.reveal-delay-3 { transition-delay: .45s; }
+.reveal-delay-4 { transition-delay: .6s; }
+
+/* ── AMBIENT ORBS ── */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+  animation: orbDrift 10s ease-in-out infinite alternate;
+}
+@keyframes orbDrift {
+  from { transform: translate(0,0) scale(1); }
+  to { transform: translate(30px,40px) scale(1.1); }
+}
+
+/* ── TYPOGRAPHY ── */
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-label::before {
+  content: '';
+  width: 24px;
+  height: 1.5px;
+  background: var(--orange);
+}
+h1, h2 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  line-height: 1.05;
+}
+h1 { font-size: clamp(48px, 7vw, 96px); }
+h2 { font-size: clamp(32px, 4vw, 52px); }
+.grad {
+  background: linear-gradient(135deg, #fff 30%, var(--orange));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.grad-orange {
+  background: linear-gradient(90deg, var(--orange), var(--orange2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── GLASS CARD ── */
+.glass-card {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px;
+  transition: border-color .3s, transform .3s;
+}
+.glass-card:hover {
+  border-color: rgba(255,107,0,.3);
+  transform: translateY(-4px);
+}
+
+/* ── LIQUID BORDER ── */
+.liquid {
+  position: relative;
+}
+.liquid::before {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  border-radius: 22px;
+  background: linear-gradient(135deg,rgba(255,107,0,.6),rgba(255,149,0,.4),rgba(124,58,237,.4),rgba(6,182,212,.3));
+  background-size: 300% 300%;
+  animation: liq 5s ease infinite;
+  z-index: -1;
+  filter: blur(2px);
+}
+@keyframes liq {
+  0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}
+}
+
+/* ════════════════════════════════
+   SECTION 1 — HERO
+   ════════════════════════════════ */
+#hero {
+  min-height: 100vh;
+  flex-direction: column;
+  text-align: center;
+  gap: 0;
+}
+.hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 50px;
+  border: 1px solid rgba(255,107,0,.3);
+  background: rgba(255,107,0,.08);
+  font-size: 12px;
+  color: var(--orange2);
+  margin-bottom: 28px;
+}
+.hero-tag-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--orange);
+  animation: blink 1.5s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:.2} }
+.hero-sub {
+  font-size: 18px;
+  color: rgba(255,255,255,.45);
+  max-width: 560px;
+  margin: 20px auto 40px;
+  line-height: 1.7;
+  font-weight: 300;
+}
+.hero-btns { display: flex; gap: 14px; justify-content: center; }
+.btn-primary {
+  padding: 14px 32px;
+  background: linear-gradient(135deg,var(--orange),var(--orange2));
+  border: none;
+  border-radius: 14px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  box-shadow: 0 4px 30px rgba(255,107,0,.35);
+  transition: all .3s;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 40px rgba(255,107,0,.5); }
+.btn-ghost {
+  padding: 14px 32px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+  color: #fff;
+  font-size: 15px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all .3s;
+}
+.btn-ghost:hover { background: rgba(255,255,255,.1); }
+.hero-stats {
+  display: flex;
+  gap: 48px;
+  margin-top: 60px;
+  justify-content: center;
+}
+.hero-stat-val {
+  font-family: 'Syne', sans-serif;
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--orange);
+}
+.hero-stat-lbl { font-size: 12px; color: rgba(255,255,255,.35); margin-top: 4px; }
+
+/* ════════════════════════════════
+   SECTION 2 — PROBLEM
+   ════════════════════════════════ */
+#problem { flex-direction: column; }
+.problem-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  max-width: 900px;
+  width: 100%;
+  margin-top: 48px;
+}
+.prob-card {
+  border-radius: 18px;
+  padding: 28px;
+  border: 1px solid rgba(248,113,113,.15);
+  background: rgba(248,113,113,.05);
+}
+.prob-icon { font-size: 32px; margin-bottom: 14px; }
+.prob-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.prob-desc { font-size: 13px; color: rgba(255,255,255,.45); line-height: 1.65; }
+.prob-tag {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(248,113,113,.15);
+  color: #f87171;
+  border: 1px solid rgba(248,113,113,.25);
+}
+
+/* ════════════════════════════════
+   SECTION 3 — SOLUTION
+   ════════════════════════════════ */
+#solution {
+  flex-direction: column;
+  background: radial-gradient(ellipse at 70% 30%, rgba(255,107,0,.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 20% 80%, rgba(124,58,237,.06) 0%, transparent 60%);
+}
+.solution-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  max-width: 1000px;
+  width: 100%;
+  align-items: center;
+  margin-top: 48px;
+}
+.solution-points { display: flex; flex-direction: column; gap: 20px; }
+.sol-point {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.sol-num {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg,var(--orange),var(--orange2));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.sol-title { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+.sol-desc { font-size: 13px; color: rgba(255,255,255,.4); line-height: 1.6; }
+.solution-visual {
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.03);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+}
+.sol-bar-row { display: flex; flex-direction: column; gap: 6px; }
+.sol-bar-label { display: flex; justify-content: space-between; font-size: 12px; color: rgba(255,255,255,.5); }
+.sol-bar-bg { height: 8px; border-radius: 4px; background: rgba(255,255,255,.06); overflow: hidden; }
+.sol-bar-fill { height: 100%; border-radius: 4px; animation: fillBar 2s ease forwards; }
+@keyframes fillBar { from { width: 0 !important; } }
+
+/* ════════════════════════════════
+   SECTION 4 — FEATURES
+   ════════════════════════════════ */
+#features { flex-direction: column; }
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  max-width: 1100px;
+  width: 100%;
+  margin-top: 48px;
+}
+.feat-card {
+  border-radius: 20px;
+  padding: 28px 24px;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  transition: transform .35s cubic-bezier(.25,.46,.45,.94);
+}
+.feat-card:hover { transform: translateY(-6px); }
+.feat-mesh {
+  position: absolute;
+  inset: 0;
+  animation: breathe 5s ease-in-out infinite;
+}
+@keyframes breathe { 0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.08)} }
+.feat-shade {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 60%;
+  background: linear-gradient(to top, rgba(0,0,0,.85), transparent);
+  z-index: 2;
+}
+.feat-body {
+  position: relative;
+  z-index: 3;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.feat-icon { font-size: 36px; }
+.feat-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.feat-desc { font-size: 12px; color: rgba(255,255,255,.5); line-height: 1.55; }
+
+/* ════════════════════════════════
+   SECTION 5 — HOW IT WORKS
+   ════════════════════════════════ */
+#howit { flex-direction: column; }
+.flow-steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-top: 56px;
+  max-width: 1000px;
+  width: 100%;
+}
+.flow-step {
+  flex: 1;
+  text-align: center;
+  position: relative;
+}
+.flow-step::after {
+  content: '→';
+  position: absolute;
+  right: -16px;
+  top: 30px;
+  font-size: 20px;
+  color: rgba(255,107,0,.4);
+}
+.flow-step:last-child::after { display: none; }
+.flow-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--orange), var(--orange2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  margin: 0 auto 16px;
+  box-shadow: 0 0 30px rgba(255,107,0,.3);
+  animation: pulse 3s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{box-shadow:0 0 30px rgba(255,107,0,.3)}50%{box-shadow:0 0 50px rgba(255,107,0,.5)} }
+.flow-step-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--orange);
+  margin-bottom: 6px;
+  letter-spacing: .1em;
+}
+.flow-step-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.flow-step-desc { font-size: 12px; color: rgba(255,255,255,.35); line-height: 1.5; }
+
+/* ════════════════════════════════
+   SECTION 6 — ARCHITECTURE
+   ════════════════════════════════ */
+#arch { flex-direction: column; }
+.arch-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  max-width: 1000px;
+  width: 100%;
+  margin-top: 48px;
+}
+.arch-card {
+  border-radius: 18px;
+  padding: 24px 20px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.03);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: all .3s;
+}
+.arch-card:hover { border-color: rgba(255,107,0,.3); transform: translateY(-4px); }
+.arch-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--accent-color, linear-gradient(90deg,var(--orange),var(--orange2)));
+}
+.arch-icon { font-size: 32px; margin-bottom: 12px; }
+.arch-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.arch-tech { font-size: 12px; color: rgba(255,255,255,.35); line-height: 1.6; }
+.arch-tag {
+  display: inline-block;
+  margin-top: 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(255,107,0,.1);
+  color: var(--orange2);
+  border: 1px solid rgba(255,107,0,.2);
+}
+
+/* ════════════════════════════════
+   SECTION 7 — SCREEN PREVIEWS
+   ════════════════════════════════ */
+#screens { flex-direction: column; }
+.screens-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 16px;
+  max-width: 1100px;
+  width: 100%;
+  margin-top: 48px;
+}
+.screen-card {
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #0d0d14;
+  position: relative;
+  min-height: 260px;
+  transition: transform .3s;
+}
+.screen-card:hover { transform: scale(1.02); }
+.screen-topbar {
+  padding: 10px 16px;
+  background: rgba(255,255,255,.04);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.screen-dot { width: 8px; height: 8px; border-radius: 50%; }
+.screen-title-bar {
+  margin-left: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,.25);
+}
+.screen-body { padding: 16px; }
+.screen-label {
+  position: absolute;
+  bottom: 12px;
+  left: 16px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,.4);
+  font-family: 'DM Mono', monospace;
+}
+
+/* Mock UI elements */
+.mock-stat-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.mock-stat { flex: 1; height: 52px; border-radius: 10px; background: rgba(255,107,0,.12); border: 1px solid rgba(255,107,0,.15); }
+.mock-bar-row { margin-bottom: 8px; }
+.mock-bar-label { font-size: 10px; color: rgba(255,255,255,.3); margin-bottom: 4px; display: flex; justify-content: space-between; }
+.mock-bar { height: 5px; border-radius: 3px; background: rgba(255,255,255,.06); overflow: hidden; }
+.mock-bar-fill { height: 100%; border-radius: 3px; }
+.mock-chat-bubble { padding: 8px 12px; border-radius: 10px; font-size: 11px; color: rgba(255,255,255,.6); margin-bottom: 8px; max-width: 85%; }
+.mock-chat-ai { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); }
+.mock-chat-user { background: linear-gradient(135deg,#ff6b00,#ff9500); margin-left: auto; color: #fff; }
+.mock-code { font-family: 'DM Mono', monospace; font-size: 10px; color: #4ade80; background: rgba(0,0,0,.4); border-radius: 8px; padding: 10px; line-height: 1.6; }
+
+/* ════════════════════════════════
+   SECTION 8 — USER TYPES
+   ════════════════════════════════ */
+#users { flex-direction: column; }
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 900px;
+  width: 100%;
+  margin-top: 48px;
+}
+.user-card {
+  border-radius: 20px;
+  padding: 32px 28px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.03);
+  position: relative;
+  transition: all .3s;
+}
+.user-card.featured {
+  border-color: rgba(255,107,0,.4);
+  background: rgba(255,107,0,.05);
+}
+.user-card.featured::before {
+  content: 'Most Popular';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 14px;
+  border-radius: 20px;
+  background: linear-gradient(135deg,var(--orange),var(--orange2));
+  color: #fff;
+  white-space: nowrap;
+}
+.user-type {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+.user-price { font-size: 13px; color: rgba(255,255,255,.3); margin-bottom: 20px; }
+.user-features { display: flex; flex-direction: column; gap: 10px; }
+.user-feat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: rgba(255,255,255,.6);
+}
+.user-feat-icon { font-size: 14px; flex-shrink: 0; }
+.user-feat.locked { color: rgba(255,255,255,.2); }
+
+/* ════════════════════════════════
+   SECTION 9 — FUTURE SCOPE
+   ════════════════════════════════ */
+#future { flex-direction: column; }
+.future-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  max-width: 1000px;
+  width: 100%;
+  margin-top: 48px;
+}
+.future-card {
+  border-radius: 18px;
+  padding: 24px 20px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--border);
+  transition: all .3s;
+  position: relative;
+  overflow: hidden;
+}
+.future-card:hover { border-color: rgba(255,107,0,.25); transform: translateY(-3px); }
+.future-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg,var(--orange),transparent);
+  opacity: 0;
+  transition: opacity .3s;
+}
+.future-card:hover::after { opacity: 1; }
+.future-icon { font-size: 28px; margin-bottom: 12px; }
+.future-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.future-desc { font-size: 12px; color: rgba(255,255,255,.35); line-height: 1.6; }
+.future-timeline {
+  margin-top: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--orange);
+  font-family: 'DM Mono', monospace;
+}
+
+/* ════════════════════════════════
+   SECTION 10 — CONCLUSION
+   ════════════════════════════════ */
+#conclusion {
+  flex-direction: column;
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 50%, rgba(255,107,0,.1) 0%, transparent 65%);
+}
+.conclusion-quote {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(24px, 3.5vw, 42px);
+  font-weight: 700;
+  color: rgba(255,255,255,.85);
+  max-width: 700px;
+  line-height: 1.2;
+  margin: 32px 0 24px;
+  letter-spacing: -.02em;
+}
+.conclusion-sub {
+  font-size: 15px;
+  color: rgba(255,255,255,.35);
+  max-width: 480px;
+  line-height: 1.7;
+  margin-bottom: 40px;
+}
+.team-credits {
+  margin-top: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.team-label { font-size: 11px; color: rgba(255,255,255,.2); text-transform: uppercase; letter-spacing: .1em; }
+.team-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(90deg,var(--orange),var(--orange2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.team-detail { font-size: 13px; color: rgba(255,255,255,.25); }
+
+/* ── SCROLL PROGRESS ── */
+.scroll-progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2.5px;
+  background: linear-gradient(90deg,var(--orange),var(--orange2));
+  z-index: 200;
+  transition: width .1s;
+}
+
+/* ── SECTION NUMBER ── */
+.sec-number {
+  position: absolute;
+  right: 48px;
+  bottom: 40px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,.12);
+  letter-spacing: .1em;
+}
+
+footer {
+  padding: 24px 48px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: rgba(255,255,255,.2);
+}
+</style>
+</head>
+<body>
+
+<!-- Scroll progress bar -->
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">SkillForge</div>
+  <div class="nav-links">
+    <a href="#problem">Problem</a>
+    <a href="#features">Features</a>
+    <a href="#arch">Architecture</a>
+    <a href="#screens">Screens</a>
+    <a href="#conclusion">Credits</a>
+  </div>
+  <button class="nav-cta">Final Year Project</button>
+</nav>
+
+<!-- ══ SECTION 1: HERO ══ -->
+<section id="hero">
+  <div class="orb" style="width:500px;height:500px;background:rgba(255,107,0,.15);top:-100px;right:-100px;animation-delay:0s"></div>
+  <div class="orb" style="width:350px;height:350px;background:rgba(124,58,237,.1);bottom:-80px;left:-60px;animation-delay:-4s"></div>
+
+  <div class="reveal">
+    <div class="hero-tag"><div class="hero-tag-dot"></div> Final Year Project — 2024–25</div>
+  </div>
+  <div class="reveal reveal-delay-1">
+    <h1 class="grad">SkillForge</h1>
+  </div>
+  <div class="reveal reveal-delay-2">
+    <p style="font-family:'Syne',sans-serif;font-size:clamp(18px,2.5vw,28px);font-weight:600;color:rgba(255,255,255,.5);letter-spacing:.02em;margin-top:8px">From College to Career</p>
+  </div>
+  <div class="reveal reveal-delay-3">
+    <p class="hero-sub">An AI-powered learning platform that bridges the gap between what colleges teach and what the industry demands — built for students, designed for careers.</p>
+  </div>
+  <div class="reveal reveal-delay-4">
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="document.getElementById('problem').scrollIntoView({behavior:'smooth'})">See the Problem →</button>
+      <button class="btn-ghost" onclick="document.getElementById('screens').scrollIntoView({behavior:'smooth'})">View Screens</button>
+    </div>
+  </div>
+  <div class="reveal reveal-delay-4">
+    <div class="hero-stats">
+      <div>
+        <div class="hero-stat-val">6+</div>
+        <div class="hero-stat-lbl">Companies</div>
+      </div>
+      <div style="width:1px;background:rgba(255,255,255,.08)"></div>
+      <div>
+        <div class="hero-stat-val">AI</div>
+        <div class="hero-stat-lbl">Powered</div>
+      </div>
+      <div style="width:1px;background:rgba(255,255,255,.08)"></div>
+      <div>
+        <div class="hero-stat-val">Free</div>
+        <div class="hero-stat-lbl">For Students</div>
+      </div>
+      <div style="width:1px;background:rgba(255,255,255,.08)"></div>
+      <div>
+        <div class="hero-stat-val">Real</div>
+        <div class="hero-stat-lbl">No Fake Data</div>
+      </div>
+    </div>
+  </div>
+  <div class="sec-number">01 / 10</div>
+</section>
+
+<!-- ══ SECTION 2: PROBLEM ══ -->
+<section id="problem">
+  <div class="orb" style="width:400px;height:400px;background:rgba(248,113,113,.08);top:50%;left:50%;transform:translate(-50%,-50%);animation-delay:-2s"></div>
+  <div style="max-width:900px;width:100%;text-align:center">
+    <div class="section-label reveal">The Problem</div>
+    <h2 class="reveal reveal-delay-1">Students are <span style="color:#f87171">not job-ready</span><br>when they graduate</h2>
+    <p class="reveal reveal-delay-2" style="font-size:15px;color:rgba(255,255,255,.35);margin:16px 0 0;line-height:1.7">Colleges teach theory. Companies want practice. The gap between the two costs students their first job.</p>
+    <div class="problem-grid reveal reveal-delay-3">
+      <div class="prob-card">
+        <div class="prob-icon">📚</div>
+        <div class="prob-title">Theory-heavy curriculum</div>
+        <div class="prob-desc">College syllabus focuses on textbooks and exams, not on real-world coding skills or industry standards.</div>
+        <div class="prob-tag">Gap #1</div>
+      </div>
+      <div class="prob-card">
+        <div class="prob-icon">💼</div>
+        <div class="prob-title">No interview preparation</div>
+        <div class="prob-desc">Students have no idea what Google, Amazon, or TCS actually ask in technical rounds until it's too late.</div>
+        <div class="prob-tag">Gap #2</div>
+      </div>
+      <div class="prob-card">
+        <div class="prob-icon">🤯</div>
+        <div class="prob-title">Expensive platforms</div>
+        <div class="prob-desc">LeetCode Premium, Coding Ninjas, AlgoExpert — all cost money most students can't afford.</div>
+        <div class="prob-tag">Gap #3</div>
+      </div>
+      <div class="prob-card">
+        <div class="prob-icon">🚫</div>
+        <div class="prob-title">No personalized guidance</div>
+        <div class="prob-desc">Generic tutorials don't know your weak spots or adapt to how you learn best as an individual.</div>
+        <div class="prob-tag">Gap #4</div>
+      </div>
+    </div>
+  </div>
+  <div class="sec-number">02 / 10</div>
+</section>
+
+<!-- ══ SECTION 3: SOLUTION ══ -->
+<section id="solution">
+  <div style="max-width:1000px;width:100%">
+    <div class="section-label reveal">Our Solution</div>
+    <h2 class="reveal reveal-delay-1">SkillForge fills every <span class="grad-orange">gap</span></h2>
+    <div class="solution-wrap">
+      <div class="solution-points reveal reveal-delay-2">
+        <div class="sol-point">
+          <div class="sol-num">1</div>
+          <div><div class="sol-title">Free for every student</div><div class="sol-desc">No paywalls. Full access to problems, AI mentor, and interview prep — zero cost.</div></div>
+        </div>
+        <div class="sol-point">
+          <div class="sol-num">2</div>
+          <div><div class="sol-title">Forge AI — your personal mentor</div><div class="sol-desc">Friendly AI that explains like a friend, adapts to your level, and remembers your weak spots.</div></div>
+        </div>
+        <div class="sol-point">
+          <div class="sol-num">3</div>
+          <div><div class="sol-title">Real company interview questions</div><div class="sol-desc">Practice exactly what Google, Amazon, Microsoft ask. Then do a full AI mock interview.</div></div>
+        </div>
+        <div class="sol-point">
+          <div class="sol-num">4</div>
+          <div><div class="sol-title">Academic + coding combined</div><div class="sol-desc">University exam questions with marks-based answers + DSA practice in one platform.</div></div>
+        </div>
+      </div>
+      <div class="solution-visual liquid reveal reveal-delay-3">
+        <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.3);margin-bottom:16px;text-transform:uppercase;letter-spacing:.08em">Student Progress</div>
+        <div class="sol-bar-row">
+          <div class="sol-bar-label"><span>Arrays & Strings</span><span style="color:#4ade80">78%</span></div>
+          <div class="sol-bar-bg"><div class="sol-bar-fill" style="width:78%;background:linear-gradient(90deg,#ff6b00,#ff9500)"></div></div>
+        </div>
+        <div class="sol-bar-row">
+          <div class="sol-bar-label"><span>Hash Maps</span><span style="color:#facc15">55%</span></div>
+          <div class="sol-bar-bg"><div class="sol-bar-fill" style="width:55%;background:linear-gradient(90deg,#7c3aed,#a78bfa)"></div></div>
+        </div>
+        <div class="sol-bar-row">
+          <div class="sol-bar-label"><span>Recursion</span><span style="color:#f87171">30%</span></div>
+          <div class="sol-bar-bg"><div class="sol-bar-fill" style="width:30%;background:linear-gradient(90deg,#06b6d4,#67e8f9)"></div></div>
+        </div>
+        <div class="sol-bar-row">
+          <div class="sol-bar-label"><span>System Design</span><span style="color:#4ade80">65%</span></div>
+          <div class="sol-bar-bg"><div class="sol-bar-fill" style="width:65%;background:linear-gradient(90deg,#34d399,#4ade80)"></div></div>
+        </div>
+        <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.06)">
+          <div style="font-size:11px;color:rgba(255,255,255,.3);margin-bottom:8px">Forge AI says:</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.6;background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.15);border-radius:10px;padding:12px">"heyyy! 👋 focus on recursion today — you're almost at 50%! wanna start with an easy one? 🔥"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sec-number">03 / 10</div>
+</section>
+
+<!-- ══ SECTION 4: FEATURES ══ -->
+<section id="features">
+  <div style="max-width:1100px;width:100%;text-align:center">
+    <div class="section-label reveal">Core Features</div>
+    <h2 class="reveal reveal-delay-1">Everything a student needs<br>to <span class="grad-orange">get hired</span></h2>
+    <div class="features-grid reveal reveal-delay-2">
+      <div class="feat-card" style="border:1px solid rgba(255,107,0,.2);background:#0a0400">
+        <div class="feat-mesh" style="background:radial-gradient(ellipse at 30% 60%,rgba(255,107,0,.6) 0%,transparent 55%),radial-gradient(ellipse at 80% 20%,rgba(255,149,0,.4) 0%,transparent 50%)"></div>
+        <div class="feat-shade"></div>
+        <div class="feat-body">
+          <div class="feat-icon">📚</div>
+          <div>
+            <div class="feat-title">Practice Problems</div>
+            <div class="feat-desc">DSA problems + university exam questions with marks-based AI answers</div>
+          </div>
+        </div>
+      </div>
+      <div class="feat-card" style="border:1px solid rgba(124,58,237,.2);background:#040010">
+        <div class="feat-mesh" style="background:radial-gradient(ellipse at 70% 30%,rgba(124,58,237,.7) 0%,transparent 50%),radial-gradient(ellipse at 20% 70%,rgba(72,202,228,.4) 0%,transparent 50%)"></div>
+        <div class="feat-shade"></div>
+        <div class="feat-body">
+          <div class="feat-icon">🤖</div>
+          <div>
+            <div class="feat-title">Ask Forge AI</div>
+            <div class="feat-desc">Friendly AI mentor that explains like a friend, not a textbook. Chat naturally, get real answers</div>
+          </div>
+        </div>
+      </div>
+      <div class="feat-card" style="border:1px solid rgba(52,211,153,.2);background:#001408">
+        <div class="feat-mesh" style="background:radial-gradient(ellipse at 30% 60%,rgba(52,211,153,.6) 0%,transparent 50%),radial-gradient(ellipse at 75% 25%,rgba(72,202,228,.4) 0%,transparent 50%)"></div>
+        <div class="feat-shade"></div>
+        <div class="feat-body">
+          <div class="feat-icon">📊</div>
+          <div>
+            <div class="feat-title">Progress Tracking</div>
+            <div class="feat-desc">XP system, streaks, skill bars, AI career analysis — see your growth every day</div>
+          </div>
+        </div>
+      </div>
+      <div class="feat-card" style="border:1px solid rgba(250,204,21,.2);background:#0a0800">
+        <div class="feat-mesh" style="background:radial-gradient(ellipse at 60% 40%,rgba(250,204,21,.5) 0%,transparent 50%),radial-gradient(ellipse at 25% 75%,rgba(255,107,0,.4) 0%,transparent 50%)"></div>
+        <div class="feat-shade"></div>
+        <div class="feat-body">
+          <div class="feat-icon">🎯</div>
+          <div>
+            <div class="feat-title">Mock Interviews</div>
+            <div class="feat-desc">Real company questions from Google, Amazon, TCS + full AI mock interview with live scoring</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sec-number">04 / 10</div>
+</section>
+
+<!-- ══ SECTION 5: HOW IT WORKS ══ -->
+<section id="howit">
+  <div style="max-width:1000px;width:100%;text-align:center">
+    <div class="section-label reveal">How It Works</div>
+    <h2 class="reveal reveal-delay-1">Your journey from <span class="grad-orange">zero to interview-ready</span></h2>
+    <div class="flow-steps reveal reveal-delay-2">
+      <div class="flow-step">
+        <div class="flow-circle">🔐</div>
+        <div class="flow-step-num">STEP 01</div>
+        <div class="flow-step-title">Sign Up Free</div>
+        <div class="flow-step-desc">Create account in 30 seconds. No credit card needed.</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-circle">📚</div>
+        <div class="flow-step-num">STEP 02</div>
+        <div class="flow-step-title">Pick & Practice</div>
+        <div class="flow-step-desc">Choose language, difficulty, company. Start solving.</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-circle">🤖</div>
+        <div class="flow-step-num">STEP 03</div>
+        <div class="flow-step-title">Ask Forge AI</div>
+        <div class="flow-step-desc">Stuck? Forge explains instantly like a friendly senior dev.</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-circle">📈</div>
+        <div class="flow-step-num">STEP 04</div>
+        <div class="flow-step-title">Track Growth</div>
+        <div class="flow-step-desc">Watch XP grow, streaks build, career path emerge.</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-circle">🎯</div>
+        <div class="flow-step-num">STEP 05</div>
+        <div class="flow-step-title">Mock Interview</div>
+        <div class="flow-step-desc">AI interviews you like Google/Amazon. Get scored live.</div>
+      </div>
+    </div>
+  </div>
+  <div class="sec-number">05 / 10</div>
+</section>
+
+<!-- ══ SECTION 6: ARCHITECTURE ══ -->
+<section id="arch">
+  <div style="max-width:1000px;width:100%;text-align:center">
+    <div class="section-label reveal">System Architecture</div>
+    <h2 class="reveal reveal-delay-1">Built with <span class="grad-orange">production-grade</span> tech</h2>
+    <div class="arch-grid reveal reveal-delay-2">
+      <div class="arch-card" style="--accent-color:linear-gradient(90deg,#61dafb,#00a4ef)">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#61dafb,#00a4ef)"></div>
+        <div class="arch-icon">⚛️</div>
+        <div class="arch-title">Frontend</div>
+        <div class="arch-tech">React.js · React Router · Context API · Lucide Icons</div>
+        <div class="arch-tag">Port 3000</div>
+      </div>
+      <div class="arch-card">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#009688,#4caf50)"></div>
+        <div class="arch-icon">⚡</div>
+        <div class="arch-title">Backend</div>
+        <div class="arch-tech">FastAPI · Python · SQLAlchemy · JWT Auth · Uvicorn</div>
+        <div class="arch-tag">Port 8000</div>
+      </div>
+      <div class="arch-card">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#7c3aed,#a78bfa)"></div>
+        <div class="arch-icon">🧠</div>
+        <div class="arch-title">AI Layer</div>
+        <div class="arch-tech">Groq API · LLaMA 3.1 8B · Structured JSON · Conversation Memory</div>
+        <div class="arch-tag">Groq Cloud</div>
+      </div>
+      <div class="arch-card">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#f59e0b,#ef4444)"></div>
+        <div class="arch-icon">🗄️</div>
+        <div class="arch-title">Database</div>
+        <div class="arch-tech">SQLite · Bcrypt · Pydantic v2 · ReportLab PDF</div>
+        <div class="arch-tag">Local / Cloud</div>
+      </div>
+    </div>
+    <div class="reveal reveal-delay-3" style="margin-top:32px;padding:20px 32px;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);display:inline-block">
+      <div style="font-family:'DM Mono',monospace;font-size:12px;color:rgba(255,255,255,.3);text-align:left;line-height:1.8">
+        React (3000) → <span style="color:#ff9500">authFetch()</span> → FastAPI (8000) → <span style="color:#a78bfa">Groq AI</span> → JSON → <span style="color:#4ade80">Student</span>
+      </div>
+    </div>
+  </div>
+  <div class="sec-number">06 / 10</div>
+</section>
+
+<!-- ══ SECTION 7: SCREENS ══ -->
+<section id="screens">
+  <div style="max-width:1100px;width:100%;text-align:center">
+    <div class="section-label reveal">App Screens</div>
+    <h2 class="reveal reveal-delay-1">Real screens. <span class="grad-orange">Real product.</span></h2>
+    <div class="screens-grid reveal reveal-delay-2">
+
+      <!-- Dashboard screen -->
+      <div class="screen-card">
+        <div class="screen-topbar">
+          <div class="screen-dot" style="background:#f87171"></div>
+          <div class="screen-dot" style="background:#facc15"></div>
+          <div class="screen-dot" style="background:#4ade80"></div>
+          <div class="screen-title-bar">skillforge / dashboard</div>
+        </div>
+        <div class="screen-body">
+          <div style="font-size:11px;color:rgba(255,255,255,.25);margin-bottom:10px">Good evening, Bhavesh 👋</div>
+          <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#fff;margin-bottom:14px">7 🔥 Day Streak</div>
+          <div class="mock-stat-row">
+            <div class="mock-stat"></div>
+            <div class="mock-stat" style="background:rgba(124,58,237,.12);border-color:rgba(124,58,237,.15)"></div>
+            <div class="mock-stat" style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.12)"></div>
+          </div>
+          <div class="mock-bar-row">
+            <div class="mock-bar-label"><span>Arrays</span><span>78%</span></div>
+            <div class="mock-bar"><div class="mock-bar-fill" style="width:78%;background:linear-gradient(90deg,#ff6b00,#ff9500)"></div></div>
+          </div>
+          <div class="mock-bar-row">
+            <div class="mock-bar-label"><span>Recursion</span><span>30%</span></div>
+            <div class="mock-bar"><div class="mock-bar-fill" style="width:30%;background:#7c3aed"></div></div>
+          </div>
+        </div>
+        <div class="screen-label">Dashboard</div>
+      </div>
+
+      <!-- Ask AI screen -->
+      <div class="screen-card">
+        <div class="screen-topbar">
+          <div class="screen-dot" style="background:#f87171"></div>
+          <div class="screen-dot" style="background:#facc15"></div>
+          <div class="screen-dot" style="background:#4ade80"></div>
+          <div class="screen-title-bar">skillforge / ask-ai</div>
+        </div>
+        <div class="screen-body">
+          <div class="mock-chat-bubble mock-chat-ai">heyyy! 👋 what's up? ready to learn?</div>
+          <div class="mock-chat-bubble mock-chat-user">explain recursion simply</div>
+          <div class="mock-chat-bubble mock-chat-ai">omg okay! imagine standing between 2 mirrors 🪞 that's recursion! 😄</div>
+        </div>
+        <div class="screen-label">Ask AI</div>
+      </div>
+
+      <!-- Interview screen -->
+      <div class="screen-card">
+        <div class="screen-topbar">
+          <div class="screen-dot" style="background:#f87171"></div>
+          <div class="screen-dot" style="background:#facc15"></div>
+          <div class="screen-dot" style="background:#4ade80"></div>
+          <div class="screen-title-bar">skillforge / interview</div>
+        </div>
+        <div class="screen-body">
+          <div style="font-size:10px;color:#4285f4;font-weight:600;margin-bottom:8px">● GOOGLE MOCK INTERVIEW</div>
+          <div class="mock-code">def two_sum(nums, target):
+  seen = {}
+  for i, n in enumerate(nums):
+    diff = target - n
+    if diff in seen:
+      return [seen[diff], i]
+    seen[n] = i</div>
+        </div>
+        <div class="screen-label">Mock Interview</div>
+      </div>
+    </div>
+  </div>
+  <div class="sec-number">07 / 10</div>
+</section>
+
+<!-- ══ SECTION 8: USER TYPES ══ -->
+<section id="users">
+  <div style="max-width:900px;width:100%;text-align:center">
+    <div class="section-label reveal">Access Levels</div>
+    <h2 class="reveal reveal-delay-1">Built for <span class="grad-orange">every student</span></h2>
+    <div class="users-grid reveal reveal-delay-2">
+      <div class="user-card">
+        <div class="user-type" style="color:rgba(255,255,255,.6)">Guest</div>
+        <div class="user-price">No account needed</div>
+        <div class="user-features">
+          <div class="user-feat"><div class="user-feat-icon">✅</div>Browse problems</div>
+          <div class="user-feat"><div class="user-feat-icon">✅</div>View company list</div>
+          <div class="user-feat"><div class="user-feat-icon">✅</div>See features</div>
+          <div class="user-feat locked"><div class="user-feat-icon">🔒</div>AI explanations</div>
+          <div class="user-feat locked"><div class="user-feat-icon">🔒</div>Mock interview</div>
+          <div class="user-feat locked"><div class="user-feat-icon">🔒</div>Progress tracking</div>
+        </div>
+      </div>
+      <div class="user-card featured">
+        <div class="user-type" style="color:var(--orange)">Free User</div>
+        <div class="user-price">Register — 100% Free</div>
+        <div class="user-features">
+          <div class="user-feat"><div class="user-feat-icon">✅</div>All practice problems</div>
+          <div class="user-feat"><div class="user-feat-icon">✅</div>Forge AI chat</div>
+          <div class="user-feat"><div class="user-feat-icon">✅</div>Progress tracking</div>
+          <div class="user-feat"><div class="user-feat-icon">✅</div>Mock interviews</div>
+          <div class="user-feat"><div class="user-feat-icon">✅</div>PDF downloads</div>
+          <div class="user-feat"><div class="user-feat-icon">✅</div>Career analysis</div>
+        </div>
+      </div>
+      <div class="user-card">
+        <div class="user-type" style="color:#facc15">Premium</div>
+        <div class="user-price">Coming soon — v2.0</div>
+        <div class="user-features">
+          <div class="user-feat"><div class="user-feat-icon">✅</div>Everything in Free</div>
+          <div class="user-feat"><div class="user-feat-icon">⭐</div>Voice AI interview</div>
+          <div class="user-feat"><div class="user-feat-icon">⭐</div>Streak Forest</div>
+          <div class="user-feat"><div class="user-feat-icon">⭐</div>Study buddy match</div>
+          <div class="user-feat"><div class="user-feat-icon">⭐</div>Priority AI support</div>
+          <div class="user-feat"><div class="user-feat-icon">⭐</div>LinkedIn certificates</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sec-number">08 / 10</div>
+</section>
+
+<!-- ══ SECTION 9: FUTURE ══ -->
+<section id="future">
+  <div style="max-width:1000px;width:100%;text-align:center">
+    <div class="section-label reveal">Future Scope</div>
+    <h2 class="reveal reveal-delay-1">This is just <span class="grad-orange">version 1.0</span></h2>
+    <div class="future-grid reveal reveal-delay-2">
+      <div class="future-card">
+        <div class="future-icon">🎤</div>
+        <div class="future-title">Voice AI Interview</div>
+        <div class="future-desc">Speak your answers. AI listens, evaluates tone, confidence, and technical accuracy in real time.</div>
+        <div class="future-timeline">v2.0 — Q3 2025</div>
+      </div>
+      <div class="future-card">
+        <div class="future-icon">🌲</div>
+        <div class="future-title">Streak Forest</div>
+        <div class="future-desc">Your consistency grows a virtual forest. 30-day streak = full bloom. Share your grove on LinkedIn.</div>
+        <div class="future-timeline">v2.0 — Q3 2025</div>
+      </div>
+      <div class="future-card">
+        <div class="future-icon">🤝</div>
+        <div class="future-title">Study Buddy Match</div>
+        <div class="future-desc">AI pairs you with a student who has opposite strengths. Learn together with shared code editor.</div>
+        <div class="future-timeline">v2.1 — Q4 2025</div>
+      </div>
+      <div class="future-card">
+        <div class="future-icon">🧬</div>
+        <div class="future-title">Learning DNA</div>
+        <div class="future-desc">AI builds your cognitive profile over time. Visual learner? Analogy-first? Every explanation adapts.</div>
+        <div class="future-timeline">v3.0 — 2026</div>
+      </div>
+    </div>
+  </div>
+  <div class="sec-number">09 / 10</div>
+</section>
+
+<!-- ══ SECTION 10: CONCLUSION ══ -->
+<section id="conclusion">
+  <div class="orb" style="width:600px;height:600px;background:rgba(255,107,0,.1);top:50%;left:50%;transform:translate(-50%,-50%);animation-delay:-1s"></div>
+  <div style="position:relative;z-index:1;text-align:center;max-width:800px">
+    <div class="section-label reveal" style="justify-content:center">Thank You</div>
+    <div class="conclusion-quote reveal reveal-delay-1">
+      "Built for students.<br>Designed for careers."
+    </div>
+    <p class="conclusion-sub reveal reveal-delay-2">
+      SkillForge is not just a final year project — it's a real product that solves a real problem. Every student deserves a fair shot at their dream career.
+    </p>
+    <div class="reveal reveal-delay-3">
+      <div class="hero-btns" style="justify-content:center;margin-bottom:16px">
+        <button class="btn-primary" onclick="window.location.href='http://localhost:3000/login'">🚀 SkillForge — Live Demo</button>
+        <button class="btn-ghost">📄 View Report</button>
+      </div>
+    </div>
+    <div class="team-credits reveal reveal-delay-4">
+      <div class="team-label">Presented by</div>
+      <div class="team-name">Bhavesh Khandare</div>
+      <div class="team-detail">Final Year · Computer Science · 2024–25</div>
+      <div style="margin-top:16px;font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,.15)">FastAPI · React · Groq AI · SQLite · JWT</div>
+    </div>
+  </div>
+  <div class="sec-number">10 / 10</div>
+</section>
+
+<footer>
+  <div>SkillForge — Final Year Project 2024–25</div>
+  <div>Built with FastAPI · React · Groq AI</div>
+</footer>
+
+<script>
+// Scroll progress bar
+window.addEventListener('scroll', () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = (window.scrollY / total) * 100;
+  document.getElementById('scrollProgress').style.width = progress + '%';
+});
+
+// Reveal on scroll
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.15 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Hero entrance on load
+window.addEventListener('load', () => {
+  document.querySelectorAll('#hero .reveal').forEach((el, i) => {
+    setTimeout(() => el.classList.add('visible'), i * 200);
+  });
+});
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime  
-from typing import Optional
+from typing import Optional, List
 
 class QuestionCreate(BaseModel):
     question_text: str
@@ -42,9 +42,14 @@ class LoginRequest(BaseModel):
     email: EmailStr
     password: str
 
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
 class AIQuestionRequest(BaseModel):
     question: str
     marks: int
+    history: Optional[List[ChatMessage]] = []
 
 class TaskResponse(BaseModel):  # ✅ Fixed typo: was "TaskRespose"
     id: int
@@ -61,7 +66,6 @@ class ActivityResponse(BaseModel):  # ✅ Fixed typo: was "AcivityResponse"
 class ProgressResponse(BaseModel):
     language: str
     percentage: int
-
     model_config = {"from_attributes": True}
     
 class TokenResponse(BaseModel):
@@ -69,4 +73,9 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     user: UserResponse
 
+class ExplainRequest(BaseModel):
+    question_id: int
+    marks: int = 4
+    language: str = "English"
+    
     model_config = {"from_attributes": True}

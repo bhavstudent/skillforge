@@ -1,17 +1,19 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
+import toast from "react-hot-toast";
+
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import { 
   User, Mail, MapPin, Github, Linkedin, 
-    Edit2, Save, X, Shield, Bell, Download, Trash2,
+  Edit2, Save, X, Shield, Bell, Download, Trash2,
   Award, FileBadge, Lock, Key, LogOut, Code2,
   Flame, Target, Zap, Camera
 } from "lucide-react";
 import "../styles/profile.css";
 
 export default function Profile() {
-  const { user, userId, logout, isAuthenticated } = useAuth();
+  const { user, userId, logout, isAuthenticated, authFetch } = useAuth();
   const fileInputRef = useRef(null);
   
   const [loading, setLoading] = useState(true);
@@ -62,7 +64,7 @@ export default function Profile() {
     if (!userId) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/profile/${userId}`);
+      const response = await authFetch(`http://localhost:8000/profile/${userId}`);
       
       if (!response.ok) {
         throw new Error("Failed to fetch profile");
@@ -83,7 +85,7 @@ export default function Profile() {
       });
       
       // Fetch achievements
-      const achievementsRes = await fetch(`http://localhost:8000/profile/${userId}/achievements`);
+      const achievementsRes = await authFetch(`http://localhost:8000/profile/${userId}/achievements`);
       if (achievementsRes.ok) {
         const achievementsData = await achievementsRes.json();
         setAchievements(achievementsData);
@@ -101,7 +103,7 @@ export default function Profile() {
     } finally {
       setLoading(false);
     }
-  }, [userId, user]);
+  }, [userId, user, authFetch]);
   
   useEffect(() => {
     if (isAuthenticated && userId) {
@@ -117,13 +119,13 @@ export default function Profile() {
     // Validate file type
     const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
-      alert("❌ Invalid file type. Please upload JPEG, PNG, or WEBP");
+      toast.error("❌ Invalid file type. Please upload JPEG, PNG, or WEBP");
       return;
     }
     
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert("❌ File too large. Max size: 5MB");
+      toast.error("❌ File too large. Max size: 5MB");
       return;
     }
     
@@ -133,14 +135,18 @@ export default function Profile() {
       const formData = new FormData();
       formData.append("file", file);
       
-      const response = await fetch(`http://localhost:8000/profile/${userId}/upload-photo`, {
+      const token = localStorage.getItem("skillforge_token");
+      const response = await fetch(`http://localhost:8000/profile/${userId}/uploaded-photo`, {
         method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        },
         body: formData
       });
       
       if (response.ok) {
         const data = await response.json();
-        alert("✅ Photo uploaded successfully!");
+        toast.success("✅ Photo uploaded successfully!");
         // Update profile data with new image
         setProfileData(prev => ({
           ...prev,
@@ -149,11 +155,11 @@ export default function Profile() {
         fetchProfile();
       } else {
         const error = await response.json();
-        alert(`❌ Upload failed: ${error.detail}`);
+        toast.error(`❌ Upload failed: ${error.detail}`);
       }
     } catch (error) {
       console.error("Upload error:", error);
-      alert("❌ Failed to upload photo");
+      toast.error("❌ Failed to upload photo");
     } finally {
       setUploading(false);
       // Reset file input
@@ -166,33 +172,33 @@ export default function Profile() {
   // Handle profile update
   const handleSaveProfile = async () => {
     setSaving(true);
+
     try {
-      const params = new URLSearchParams({
-        bio: profileSettings.bio,
-        location: profileSettings.location,
-        website: profileSettings.website,
-        github: profileSettings.github,
-        linkedin: profileSettings.linkedin,
-        is_public: profileSettings.isPublic
-      });
-      
-      const response = await fetch(`http://localhost:8000/profile/${userId}?${params}`, {
+      const response = await authFetch(`http://localhost:8000/profile/${userId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bio: profileSettings.bio,
+          location: profileSettings.location,
+          website: profileSettings.website,
+          github: profileSettings.github,
+          linkedin: profileSettings.linkedin,
+          is_public: profileSettings.isPublic
+        })
       });
-      
+
       if (response.ok) {
         await response.json();
-        alert("✅ Profile updated successfully!");
+        toast.success("✅ Profile updated successfully!");
         setEditMode(false);
         fetchProfile();
       } else {
         const error = await response.json();
-        alert(`❌ Failed: ${error.detail}`);
+        toast.error(`❌ Failed: ${error.detail}`);
       }
     } catch (error) {
       console.error("Update error:", error);
-      alert("❌ Failed to update profile");
+      toast.error("❌ Failed to update profile");
     } finally {
       setSaving(false);
     }
@@ -201,20 +207,20 @@ export default function Profile() {
   // Handle password change
   const handleChangePassword = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert("❌ Passwords don't match!");
+      toast.error("❌ Passwords don't match!");
       return;
     }
     
     if (passwordData.newPassword.length < 6) {
-      alert("❌ Password must be at least 6 characters");
+      toast.error("❌ Password must be at least 6 characters");
       return;
     }
     
     try {
-      alert("✅ Password changed successfully!");
+      toast.success("✅ Password changed successfully!");
       setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
     } catch (error) {
-      alert("❌ Failed to change password");
+      toast.error("❌ Failed to change password");
     }
   };
   
@@ -242,7 +248,7 @@ export default function Profile() {
   const handleDeleteAccount = () => {
     const confirm = window.confirm("⚠️ Are you sure? This will permanently delete your account and all data.");
     if (confirm) {
-      alert("Account deletion requested. Check email for confirmation.");
+      toast.success("Account deletion requested. Check email for confirmation.");
     }
   };
   
@@ -660,7 +666,7 @@ export default function Profile() {
                       </div>
                       <button 
                         className="btn-download"
-                        onClick={() => alert(`📜 Downloading certificate for "${achievement.title}"...`)}
+                        onClick={() => toast.success(`📜 Downloading certificate for "${achievement.title}"...`)}
                       >
                         <Download size={16} />
                         Certificate

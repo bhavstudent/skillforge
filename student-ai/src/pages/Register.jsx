@@ -58,7 +58,7 @@ export default function Register() {
                             <div className="logo-icon">🚀</div>
                             <h1>Create Account</h1>
                         </div>
-                        <p>Start your leaning journey wirg SkillForge</p>
+                        <p>Start your learning journey with SkillForge</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="auth-form">

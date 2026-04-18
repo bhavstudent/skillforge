@@ -6,7 +6,7 @@ from backend.models import ActivityLog, Dailytask, UserProgress
 router = APIRouter(prefix = "/progress", tags = ["Progress"])
 
 @router.get("/{user_id}")
-def calculate_progress(user_id: int, db: Session = Depends(get_db)):
+def calculate_progress(user_id: str, db: Session = Depends(get_db)):
     languages = ["Java", "Python", "DSA", "C", "C++", "JavaScript"]
     result = []
 
@@ -17,8 +17,8 @@ def calculate_progress(user_id: int, db: Session = Depends(get_db)):
             .join(Dailytask)
             .filter(
                 ActivityLog.user_id == user_id,
-            ActivityLog.completed == True,
-            Dailytask.language == lang
+                ActivityLog.completed == True,
+                Dailytask.language == lang
             )
 
             .count()

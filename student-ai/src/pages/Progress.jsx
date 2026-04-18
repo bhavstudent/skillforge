@@ -30,8 +30,8 @@ const ACHIEVEMENTS = [
 export default function Progress() {
   const [loading, setLoading] = useState(true);
   const [progressData, setProgressData] = useState([]); // ✅ Start with empty array
-  // ✅ FIXED: Destructure userId from useAuth (returns object, not array!)
-  const { userId, isAuthenticated } = useAuth();
+
+  const { userId, isAuthenticated, authFetch } = useAuth();
   const [userLevel, setUserLevel] = useState(1);
   const [userXP, setUserXP] = useState(0);
   const [currentStreak] = useState(7);
@@ -67,7 +67,7 @@ export default function Progress() {
     
     setInsightLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/ai/career-analysis", {
+      const response = await authFetch("http://localhost:8000/ai/career-analysis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -80,7 +80,7 @@ export default function Progress() {
           streak: currentStreak,
           topics: ["Arrays", "Strings", "Data Structures", "Algorithms", "OOP"]
         })
-      });
+      }, []);
       
       if (!response.ok) throw new Error("Failed to fetch career insight");
       
@@ -91,7 +91,7 @@ export default function Progress() {
     } finally {
       setInsightLoading(false);
     }
-  }, [progressData, totalSolved, currentStreak, isAuthenticated, userId]);
+  }, [progressData, totalSolved, currentStreak, isAuthenticated, userId, authFetch]);
 
   // ✅ FIXED: useEffect with proper dependencies
   useEffect(() => {
@@ -108,7 +108,7 @@ export default function Progress() {
     }
     
     try {
-      const response = await fetch(`http://localhost:8000/progress/${userId}`);
+      const response = await authFetch(`http://localhost:8000/progress/${userId}`);
       
       if (!response.ok) {
         // Fallback to mock data
@@ -152,7 +152,7 @@ export default function Progress() {
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, authFetch]);
 
   // ✅ FIXED: Fetch progress on mount
   useEffect(() => {

@@ -1,4 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
+import{ useAuth } from "../context/AuthContext";
+import toast from "react-hot-toast";
+
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +10,8 @@ import "../styles/Tasks.css";
 
 export default function Tasks() {
   const navigate = useNavigate();
+  const {authFetch} = useAuth();
+
   const [problems, setProblems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -34,10 +39,10 @@ export default function Tasks() {
         ? "http://localhost:8000/tasks/today"
         : `http://localhost:8000/tasks/today?language=${lang}`;
       
-      const response = await fetch(url);
+      const response = await authFetch(url);
       
       if (!response.ok) {
-        const fallback = await fetch("http://localhost:8000/questions");
+        const fallback = await authFetch("http://localhost:8000/questions");
         if (!fallback.ok) throw new Error("Failed to fetch tasks");
         
         const data = await fallback.json();
@@ -75,7 +80,7 @@ export default function Tasks() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [authFetch]);
 
   useEffect(() => {
     fetchTasks();
@@ -92,7 +97,7 @@ export default function Tasks() {
     try {
       setExplanationLoading(problem.id);
       
-      const response = await fetch("http://localhost:8000/ai/explain-question", {
+      const response = await authFetch("http://localhost:8000/ai/explain-question", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -112,7 +117,7 @@ export default function Tasks() {
       
     } catch (err) {
       console.error("Explanation error:", err);
-      alert("⚠️ Could not generate explanation. Try again later.");
+      toast.error("⚠️ Could not generate explanation. Try again later.");
     } finally {
       setExplanationLoading(null);
     }

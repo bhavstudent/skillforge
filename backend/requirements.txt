@@ -1,21 +1,15 @@
-# SkillForge - Backend Dependencies
-# Clean version for deployment (~50MB install instead of ~2GB)
 
-# --- Core API ---
 fastapi==0.127.0
 uvicorn==0.40.0
 starlette==0.50.0
-
-# --- Database ---
 sqlalchemy
-
-# --- Auth & Security ---
 passlib[bcrypt]
 python-jose[cryptography]
 python-dotenv==1.2.1
 
-# --- AI (Groq API - no local models needed) ---
+# --- AI (API - no local models needed) ---
 groq==0.4.2
+google-genai
 
 # --- Data validation ---
 pydantic==2.11.7
