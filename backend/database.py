@@ -1,6 +1,3 @@
-# backend/database.py
-# ✅ No changes needed - this file is correct!
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
@@ -10,12 +7,7 @@ engine = create_engine(
     DATABASE_URL, connect_args={"check_same_thread": False}
 )
 
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine
-)
-
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 def get_db():
@@ -24,3 +16,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
+def init_db():
+    """Called on startup to ensure DB tables exist"""
+    Base.metadata.create_all(bind=engine)
