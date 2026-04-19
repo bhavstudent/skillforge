@@ -1,16 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
-import{ useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
-
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import { useNavigate } from "react-router-dom";
 import { Code2, Filter, ChevronRight, Sparkles } from "lucide-react";
+import API_BASE from "../config";
 import "../styles/Tasks.css";
 
 export default function Tasks() {
   const navigate = useNavigate();
-  const {authFetch} = useAuth();
+  const { authFetch } = useAuth();
 
   const [problems, setProblems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,50 +19,48 @@ export default function Tasks() {
   const [showExplanation, setShowExplanation] = useState(null);
   const [explanationLoading, setExplanationLoading] = useState(null);
 
-  // Programming languages for cards
   const languageCards = [
-    { name: "Python", icon: "🐍", color: "#3776ab", problems: 0 },
-    { name: "Java", icon: "☕", color: "#f89820", problems: 0 },
-    { name: "JavaScript", icon: "📜", color: "#f7df1e", problems: 0 },
-    { name: "C++", icon: "⚡", color: "#00599c", problems: 0 },
-    { name: "SQL", icon: "🗄️", color: "#003b57", problems: 0 },
-    { name: "DSA", icon: "🔗", color: "#ff7b00", problems: 0 },
+    { name: "Python", icon: "🐍", color: "#3776ab" },
+    { name: "Java", icon: "☕", color: "#f89820" },
+    { name: "JavaScript", icon: "📜", color: "#f7df1e" },
+    { name: "C++", icon: "⚡", color: "#00599c" },
+    { name: "SQL", icon: "🗄️", color: "#003b57" },
+    { name: "DSA", icon: "🔗", color: "#ff7b00" },
   ];
 
-  // Fetch tasks
   const fetchTasks = useCallback(async (lang = "All") => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      const url = lang === "All" 
-        ? "http://localhost:8000/tasks/today"
-        : `http://localhost:8000/tasks/today?language=${lang}`;
-      
+      const url = lang === "All"
+        ? `${API_BASE}/tasks/today`
+        : `${API_BASE}/tasks/today?language=${lang}`;
+
       const response = await authFetch(url);
-      
+
       if (!response.ok) {
-        const fallback = await authFetch("http://localhost:8000/questions");
+        const fallback = await authFetch(`${API_BASE}/questions`);
         if (!fallback.ok) throw new Error("Failed to fetch tasks");
-        
+
         const data = await fallback.json();
         const tasksArray = Array.isArray(data) ? data : (data.questions || []);
-        
+
         setProblems(tasksArray.map(task => ({
-          id: task.id || task.question_id,
+          id: task.id,
           title: task.title || task.question_text,
           difficulty: task.difficulty,
           language: task.language || task.subject || "General",
-          percentage: task.percentage || Math.floor(Math.random() * 40) + 60,
+          percentage: task.percentage || 70,
           description: task.description || task.topic || "",
           marks: task.marks || 4
         })));
         return;
       }
-      
+
       const data = await response.json();
       const tasksArray = Array.isArray(data) ? data : (data.tasks || []);
-      
+
       setProblems(tasksArray.map(task => ({
         id: task.id,
         title: task.title,
@@ -72,10 +70,10 @@ export default function Tasks() {
         description: task.description || "",
         marks: task.marks || 4
       })));
-      
+
     } catch (err) {
       console.error("Error fetching tasks:", err);
-      setError("Could not load tasks. Please try again later.");
+      setError("Could not load tasks. Please try again.");
       setProblems([]);
     } finally {
       setLoading(false);
@@ -86,45 +84,39 @@ export default function Tasks() {
     fetchTasks();
   }, [fetchTasks]);
 
-  // Handle language card click
   const handleLanguageSelect = (lang) => {
     setSelectedLanguage(lang);
     fetchTasks(lang);
   };
 
-  // Handle AI explanation
   const handleShowExplanation = async (problem) => {
     try {
       setExplanationLoading(problem.id);
-      
-      const response = await authFetch("http://localhost:8000/ai/explain-question", {
+
+      const response = await authFetch(`${API_BASE}/ai/explain-question`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question_id: problem.id,
           marks: problem.marks || 4,
           language: "English"
         })
       });
-      
+
       if (!response.ok) throw new Error("Failed to generate explanation");
-      
+
       const data = await response.json();
-      setShowExplanation({
-        problem,
-        explanation: data.explanation,
-      });
-      
+      setShowExplanation({ problem, explanation: data.explanation });
+
     } catch (err) {
       console.error("Explanation error:", err);
-      toast.error("⚠️ Could not generate explanation. Try again later.");
+      toast.error("Could not generate explanation. Try again.");
     } finally {
       setExplanationLoading(null);
     }
   };
 
   const getDifficultyColor = (difficulty) => {
-    switch(difficulty?.toLowerCase()) {
+    switch (difficulty?.toLowerCase()) {
       case "easy": return "#4ade80";
       case "medium": return "#facc15";
       case "hard": return "#f87171";
@@ -132,7 +124,6 @@ export default function Tasks() {
     }
   };
 
-  // Loading state
   if (loading) {
     return (
       <>
@@ -155,25 +146,23 @@ export default function Tasks() {
       <Navbar />
       <div className="tasks-page">
         <Sidebar />
-        
+
         <main className="tasks-main">
-          {/* Header */}
           <div className="tasks-header">
             <div>
               <h1>📚 Daily Tasks</h1>
-              <p>Build your knowledge from scratch with curated tasks</p>
+              <p>Build your knowledge with curated tasks</p>
             </div>
             {error && (
               <div className="error-banner">
-                ⚠️ {error}
+                {error}
                 <button onClick={() => fetchTasks(selectedLanguage)}>Retry</button>
               </div>
             )}
           </div>
 
-          {/* Language Cards - LARGE FORMAT */}
           <div className="language-cards-grid">
-            <div 
+            <div
               className={`language-card ${selectedLanguage === "All" ? "active" : ""}`}
               onClick={() => handleLanguageSelect("All")}
             >
@@ -182,15 +171,13 @@ export default function Tasks() {
               <p>{problems.length} tasks</p>
               <ChevronRight size={20} className="card-arrow" />
             </div>
-            
+
             {languageCards.map((lang) => (
-              <div 
+              <div
                 key={lang.name}
                 className={`language-card ${selectedLanguage === lang.name ? "active" : ""}`}
                 onClick={() => handleLanguageSelect(lang.name)}
-                style={{
-                  borderColor: selectedLanguage === lang.name ? lang.color : "transparent"
-                }}
+                style={{ borderColor: selectedLanguage === lang.name ? lang.color : "transparent" }}
               >
                 <div className="card-icon">{lang.icon}</div>
                 <h3>{lang.name}</h3>
@@ -200,19 +187,17 @@ export default function Tasks() {
             ))}
           </div>
 
-          {/* Selected Language Filter */}
           {selectedLanguage !== "All" && (
             <div className="active-filter">
               <Filter size={16} />
-              <span>Showing tasks for: <strong>{selectedLanguage}</strong></span>
-              <button onClick={() => handleLanguageSelect("All")}>Clear Filter</button>
+              <span>Showing: <strong>{selectedLanguage}</strong></span>
+              <button onClick={() => handleLanguageSelect("All")}>Clear</button>
             </div>
           )}
 
-          {/* Tasks List */}
           <div className="tasks-section">
             <h2>Today's Tasks</h2>
-            
+
             {problems.length > 0 ? (
               <div className="tasks-list">
                 {problems.map((problem) => (
@@ -220,21 +205,17 @@ export default function Tasks() {
                     <div className="task-content">
                       <h3 className="task-title">{problem.title}</h3>
                       <p className="task-description">{problem.description}</p>
-                      
                       <div className="task-meta">
-                        <span 
-                          className="difficulty-badge"
-                          style={{ color: getDifficultyColor(problem.difficulty) }}
-                        >
+                        <span className="difficulty-badge" style={{ color: getDifficultyColor(problem.difficulty) }}>
                           {problem.difficulty}
                         </span>
                         <span className="language-tag">{problem.language}</span>
                         <span className="marks-tag">{problem.marks} marks</span>
                       </div>
                     </div>
-                    
+
                     <div className="task-actions">
-                      <button 
+                      <button
                         className="btn-explain"
                         onClick={() => handleShowExplanation(problem)}
                         disabled={explanationLoading === problem.id}
@@ -242,18 +223,14 @@ export default function Tasks() {
                         {explanationLoading === problem.id ? (
                           <span className="loading-spinner-small"></span>
                         ) : (
-                          <>
-                            <Sparkles size={16} />
-                            Explain
-                          </>
+                          <><Sparkles size={16} /> Explain</>
                         )}
                       </button>
-                      <button 
+                      <button
                         className="btn-practice"
                         onClick={() => navigate(`/practice/${problem.id}`)}
                       >
-                        <Code2 size={16} />
-                        Practice
+                        <Code2 size={16} /> Practice
                       </button>
                     </div>
                   </div>
@@ -266,11 +243,9 @@ export default function Tasks() {
               </div>
             )}
           </div>
-
         </main>
       </div>
 
-      {/* Explanation Modal */}
       {showExplanation && (
         <ExplanationModal
           problem={showExplanation.problem}
@@ -286,7 +261,6 @@ export default function Tasks() {
   );
 }
 
-// Explanation Modal Component
 function ExplanationModal({ problem, explanation, onClose, onPractice }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -295,7 +269,7 @@ function ExplanationModal({ problem, explanation, onClose, onPractice }) {
           <h2>{problem.title}</h2>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
-        
+
         <div className="explanation-body">
           {explanation.concept_overview && (
             <section>
@@ -303,43 +277,34 @@ function ExplanationModal({ problem, explanation, onClose, onPractice }) {
               <p>{explanation.concept_overview}</p>
             </section>
           )}
-          
           {explanation.visual_diagram && (
             <section>
               <h3>📊 Visualization</h3>
               <pre className="diagram">{explanation.visual_diagram}</pre>
             </section>
           )}
-          
           {explanation.step_by_step && (
             <section>
               <h3>📝 Step-by-Step</h3>
               <ol>
-                {explanation.step_by_step.map((step, i) => (
-                  <li key={i}>{step}</li>
-                ))}
+                {explanation.step_by_step.map((step, i) => <li key={i}>{step}</li>)}
               </ol>
             </section>
           )}
-          
           {explanation.code_example && (
             <section>
               <h3>💻 Code Example</h3>
               <pre className="code-block">{explanation.code_example}</pre>
             </section>
           )}
-          
           {explanation.key_points && (
             <section>
               <h3>🔑 Key Points</h3>
               <ul>
-                {explanation.key_points.map((point, i) => (
-                  <li key={i}>{point}</li>
-                ))}
+                {explanation.key_points.map((point, i) => <li key={i}>{point}</li>)}
               </ul>
             </section>
           )}
-          
           {explanation.summary && (
             <section className="summary">
               <h3>✨ Summary</h3>
@@ -347,12 +312,11 @@ function ExplanationModal({ problem, explanation, onClose, onPractice }) {
             </section>
           )}
         </div>
-        
+
         <div className="modal-footer">
           <button className="btn-secondary" onClick={onClose}>Close</button>
           <button className="btn-primary" onClick={onPractice}>
-            <Code2 size={16} />
-            Practice Now
+            <Code2 size={16} /> Practice Now
           </button>
         </div>
       </div>

@@ -1,20 +1,35 @@
 services:
   - type: web
-    name: student-ai-backend
+    name: skillforge-backend
     env: python
+    region: singapore
+    plan: free
     buildCommand: pip install -r backend/requirements.txt
-    startCommand: backend/Procfile
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.9
-      - fromDatabase:
-          name: student-ai-db
+        value: "3.11.9"
+      - key: GROQ_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: skillforge-db
           property: connectionString
+
   - type: web
-    name: student-ai-frontend
+    name: skillforge-frontend
     env: static
     buildCommand: cd student-ai && npm install && npm run build
-    staticPublishPath: student-ai/build
-  - type: pgsql
-    name: student-ai-db
-    diskSizeMiB: 512
+    staticPublishPath: frontend/build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://skillforge-backend.onrender.com
+
+databases:
+  - name: skillforge-db
+    plan: free
+    region: singapore

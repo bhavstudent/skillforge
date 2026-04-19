@@ -1,4 +1,4 @@
-from database import Base
+from backend.database import Base
 from sqlalchemy import Column, String, Integer, Text, DateTime, ForeignKey, Boolean
 from datetime import datetime
 
@@ -24,7 +24,6 @@ class User(Base):
     password = Column(String, nullable=False)
     role = Column(String, default="student", nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
-    
     bio = Column(Text, nullable=True)
     location = Column(String, nullable=True)
     website = Column(String, nullable=True)
@@ -32,7 +31,6 @@ class User(Base):
     linkedin = Column(String, nullable=True)
     profile_image = Column(String, nullable=True)
     is_public = Column(Boolean, default=True)
-    
     created_at = Column(DateTime, default=datetime.utcnow)
 
 class Dailytask(Base):

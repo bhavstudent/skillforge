@@ -1,164 +1,296 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Code2, Sparkles, Languages, Copy, Check } from "lucide-react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
-import RightPanel from "../components/RightPanel";
+import API_BASE from "../config";
+import "../styles/practice.css";
 
-function Payments() {
-    const [selectedPlan, setSelectedPlan] = useState(null);
+const getCodeTemplate = (lang, title) => {
+  const templates = {
+    Python: `# ${title || "Problem"}\n\ndef solve():\n    pass`,
+    Java: `// ${title || "Problem"}\n\npublic class Solution {\n    public static void main(String[] args) {}\n}`,
+    JavaScript: `// ${title || "Problem"}\n\nfunction solve() {\n    \n}`,
+    "C++": `// ${title || "Problem"}\n\n#include <iostream>\nusing namespace std;\n\nint main() {\n    return 0;\n}`,
+    SQL: `-- ${title || "Problem"}\n\nSELECT * FROM table_name\nWHERE condition;`,
+  };
+  return templates[lang] || templates.Python;
+};
 
-    const plans = [
-        {
-            id: "monthly",
-            name: "Monthly",
-            price: 9.99,
-            period: "month",
-            features: [
-                "Unlimited problem access",
-                "AI assistance anytime",
-                "Progress tracking",
-                "Company problems"
-            ]
-        },
-        {
-            id: "yearly",
-            name: "Yearly",
-            price: 79.99,
-            period: "year",
-            popular: true,
-            savings: "Save 33%",
-            features: [
-                "Everything in Monthly",
-                "Priority support",
-                "Exclusive tutorials",
-                "Certificate of completion",
-                "Early access to new features"
-            ]
-        }
-    ];
+export default function Practice() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { authFetch } = useAuth();
 
+  const [problem, setProblem] = useState(null);
+  const [explanation, setExplanation] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [practiceLanguage, setPracticeLanguage] = useState("Python");
+  const [code, setCode] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [voiceOn, setVoiceOn] = useState(false);
+  const [availableVoices, setAvailableVoices] = useState([]);
+  const [selectedVoice, setSelectedVoice] = useState("");
+
+  const languages = ["Python", "Java", "JavaScript", "C++", "SQL"];
+
+  useEffect(() => {
+    return () => window.speechSynthesis.cancel();
+  }, []);
+
+  useEffect(() => {
+    const loadVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+      setAvailableVoices(voices);
+      const good = voices.find(v =>
+        v.lang.includes("en-US") &&
+        (v.name.includes("Google") || v.name.includes("Microsoft"))
+      );
+      if (good) setSelectedVoice(good.name);
+    };
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const problemRes = await authFetch(`${API_BASE}/questions`);
+        const problems = await problemRes.json();
+        const found = problems.find(p => p.id === Number(id));
+        setProblem(found);
+        setCode(getCodeTemplate("Python", found?.question_text));
+
+        const explainRes = await authFetch(`${API_BASE}/ai/explain-question`, {
+          method: "POST",
+          body: JSON.stringify({ question_id: Number(id), marks: 4 })
+        });
+        const explainData = await explainRes.json();
+        setExplanation(explainData.explanation);
+
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [id, authFetch]);
+
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const cleanTextForSpeech = (text) => {
+    if (!text) return "";
+    let clean = text.replace(/[\u{1F600}-\u{1F6FF}]/gu, "");
+    const slangMap = {
+      "tbh": "to be honest", "ngl": "not gonna lie", "fr": "for real",
+      "gonna": "going to", "wanna": "want to", "gotta": "got to"
+    };
+    Object.keys(slangMap).forEach(slang => {
+      clean = clean.replace(new RegExp(`\\b${slang}\\b`, "gi"), slangMap[slang]);
+    });
+    return clean.replace(/\s+/g, " ").trim();
+  };
+
+  const speakText = (text) => {
+    if (!voiceOn || !text) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(cleanTextForSpeech(text));
+    const voice = availableVoices.find(v => v.name === selectedVoice);
+    if (voice) utterance.voice = voice;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  if (loading) {
     return (
-        <>
-            <Navbar />
-            <div className="dashboard-layout">
-                <Sidebar />
-                
-                <main className="dashboard-main">
-                    <div className="payments-container">
-                        <div className="payments-header">
-                            <h1 className="page-title">💎 Upgrade to Premium</h1>
-                            <p>Unlock your full potential with SkillForge Premium</p>
-                        </div>
+      <>
+        <Navbar />
+        <div className="practice-page">
+          <Sidebar />
+          <main className="practice-main">
+            <div className="loading-practice">
+              <div className="loading-spinner"></div>
+              <p>Loading problem and AI explanation...</p>
+            </div>
+          </main>
+        </div>
+      </>
+    );
+  }
 
-                        <div className="plans-grid">
-                            {plans.map(plan => (
-                                <div 
-                                    key={plan.id} 
-                                    className={`plan-card ${plan.popular ? "popular" : ""} ${selectedPlan === plan.id ? "selected" : ""}`}
-                                    onClick={() => setSelectedPlan(plan.id)}
-                                >
-                                    {plan.popular && <span className="popular-badge">Most Popular</span>}
-                                    {plan.savings && <span className="savings-badge">{plan.savings}</span>}
-                                    
-                                    <h2 className="plan-name">{plan.name}</h2>
-                                    <div className="plan-price">
-                                        <span className="currency">$</span>
-                                        <span className="amount">{plan.price}</span>
-                                        <span className="period">/{plan.period}</span>
-                                    </div>
+  return (
+    <>
+      <Navbar />
+      <div className="practice-page">
+        <Sidebar />
+        <main className="practice-main">
+          <div className="practice-container">
 
-                                    <ul className="plan-features">
-                                        {plan.features.map((feature, index) => (
-                                            <li key={index}>
-                                                <span className="check">✓</span>
-                                                {feature}
-                                            </li>
-                                        ))}
-                                    </ul>
+            {/* LEFT: AI Explanation */}
+            <div className="explanation-panel">
+              <div className="panel-header">
+                <Sparkles size={20} className="icon-sparkle" />
+                <h2>AI Explanation</h2>
+                <button
+                  onClick={() => speakText(explanation?.concept_overview)}
+                  style={{ marginLeft: 10, fontSize: 12 }}
+                >
+                  🔊 Read
+                </button>
+                <button
+                  onClick={() => setVoiceOn(!voiceOn)}
+                  style={{ marginLeft: 6, fontSize: 12 }}
+                >
+                  {voiceOn ? "🔇 ON" : "🔈 OFF"}
+                </button>
+                <div className="ai-badge">
+                  <div className="ai-badge-dot"></div>
+                  Forge AI
+                </div>
+              </div>
 
-                                    <button className={`plan-btn ${plan.popular ? "primary" : ""}`}>
-                                        {selectedPlan === plan.id ? "Selected" : "Choose Plan"}
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
+              <div className="explanation-content">
+                {!explanation && (
+                  <div className="exp-empty">
+                    <div className="exp-empty-icon">🤖</div>
+                    <p>AI explanation will appear here</p>
+                    <span>Make sure backend is running</span>
+                  </div>
+                )}
 
-                        <div className="faq-section">
-                            <h2>Frequently Asked Questions</h2>
-                            <div className="faq-grid">
-                                <div className="faq-item">
-                                    <h3>Can I cancel anytime?</h3>
-                                    <p>Yes! You can cancel your subscription at any time. You'll continue to have access until the end of your billing period.</p>
-                                </div>
-                                <div className="faq-item">
-                                    <h3>Is there a free trial?</h3>
-                                    <p>We offer a 7-day free trial for new users. You can cancel anytime during the trial period.</p>
-                                </div>
-                                <div className="faq-item">
-                                    <h3>What payment methods do you accept?</h3>
-                                    <p>We accept all major credit cards, debit cards, and PayPal.</p>
-                                </div>
-                                <div className="faq-item">
-                                    <h3>Can I switch plans?</h3>
-                                    <p>Yes! You can upgrade or downgrade your plan at any time. Changes take effect on your next billing cycle.</p>
-                                </div>
-                            </div>
-                        </div>
+                {explanation?.concept_overview && (
+                  <div className="exp-card exp-overview">
+                    <div className="exp-card-label"><span className="exp-label-icon">💡</span>Concept Overview</div>
+                    <p>{explanation.concept_overview}</p>
+                  </div>
+                )}
 
-                        <div className="testimonials">
-                            <h2>What Our Users Say</h2>
-                            <div className="testimonial-grid">
-                                <div className="testimonial-card">
-                                    <p>"SkillForge Premium helped me land my dream job at Google! The AI assistance is incredibly helpful."</p>
-                                    <span>- Sarah K., Software Engineer</span>
-                                </div>
-                                <div className="testimonial-card">
-                                    <p>"The company-specific problems were a game changer for my interview prep."</p>
-                                    <span>- Mike T., Product Manager</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </main>
+                {explanation?.visual_diagram && (
+                  <div className="exp-card exp-diagram">
+                    <div className="exp-card-label"><span className="exp-label-icon">📊</span>Visual Diagram</div>
+                    <pre className="diagram-box">{explanation.visual_diagram}</pre>
+                  </div>
+                )}
 
-                <RightPanel />
+                {explanation?.step_by_step?.length > 0 && (
+                  <div className="exp-card exp-steps">
+                    <div className="exp-card-label"><span className="exp-label-icon">📝</span>Step by Step</div>
+                    <ol className="exp-steps-list">
+                      {explanation.step_by_step.map((step, i) => (
+                        <li key={i}>
+                          <div className="exp-step-num">{i + 1}</div>
+                          <div className="exp-step-text">{step}</div>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+
+                {explanation?.code_example && (
+                  <div className="exp-card exp-code">
+                    <div className="exp-card-label"><span className="exp-label-icon">💻</span>Code Example</div>
+                    <pre className="exp-code-block">
+                      {explanation.code_example.replace(/```\w*/g, "").replace(/```/g, "").trim()}
+                    </pre>
+                  </div>
+                )}
+
+                {explanation?.key_points?.length > 0 && (
+                  <div className="exp-card exp-keypoints">
+                    <div className="exp-card-label"><span className="exp-label-icon">🔑</span>Key Points</div>
+                    <ul className="exp-keypoints-list">
+                      {explanation.key_points.map((point, i) => (
+                        <li key={i}><div className="exp-kp-dot"></div>{point}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {explanation?.common_mistakes?.length > 0 && (
+                  <div className="exp-card exp-mistakes">
+                    <div className="exp-card-label"><span className="exp-label-icon">⚠️</span>Common Mistakes</div>
+                    <ul className="exp-mistakes-list">
+                      {explanation.common_mistakes.map((m, i) => (
+                        <li key={i}><div className="exp-mistake-dot"></div>{m}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {explanation?.practice_tip && (
+                  <div className="exp-card exp-tip">
+                    <div className="exp-card-label"><span className="exp-label-icon">🎯</span>Practice Tip</div>
+                    <p>{explanation.practice_tip}</p>
+                  </div>
+                )}
+
+                {explanation?.summary && (
+                  <div className="exp-card exp-summary">
+                    <div className="exp-card-label"><span className="exp-label-icon">✨</span>Summary</div>
+                    <p>{explanation.summary}</p>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <style>{`
-                .payments-container { max-width: 1000px; }
-                .payments-header { text-align: center; margin-bottom: 40px; }
-                .payments-header p { color: #888; margin-top: 8px; }
-                .plans-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 48px; }
-                .plan-card { background: #1a1a1a; border-radius: 16px; padding: 32px; cursor: pointer; transition: all 0.3s; position: relative; border: 2px solid transparent; }
-                .plan-card:hover { transform: translateY(-4px); }
-                .plan-card.popular { border-color: #ffa116; }
-                .plan-card.selected { border-color: #ffa116; background: #1f1f1f; }
-                .popular-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #ffa116; color: #000; padding: 4px 16px; border-radius: 12px; font-size: 12px; font-weight: bold; }
-                .savings-badge { position: absolute; top: 12px; right: 12px; background: #0f3; color: #000; padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: bold; }
-                .plan-name { font-size: 24px; margin-bottom: 16px; }
-                .plan-price { margin-bottom: 24px; }
-                .currency { font-size: 20px; vertical-align: top; }
-                .amount { font-size: 48px; font-weight: bold; }
-                .period { color: #888; }
-                .plan-features { list-style: none; margin-bottom: 24px; }
-                .plan-features li { padding: 8px 0; color: #ccc; display: flex; gap: 8px; }
-                .check { color: #0f3; }
-                .plan-btn { width: 100%; padding: 14px; border-radius: 8px; border: 2px solid #ffa116; background: transparent; color: #ffa116; font-weight: bold; cursor: pointer; transition: all 0.2s; }
-                .plan-btn.primary { background: #ffa116; color: #000; }
-                .plan-btn:hover { transform: scale(1.02); }
-                .faq-section, .testimonials { margin-bottom: 40px; }
-                .faq-section h2, .testimonials h2 { margin-bottom: 24px; }
-                .faq-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-                .faq-item { background: #1a1a1a; padding: 20px; border-radius: 12px; }
-                .faq-item h3 { font-size: 16px; margin-bottom: 8px; color: #ffa116; }
-                .faq-item p { color: #888 14px;; font-size: line-height: 1.5; }
-                .testimonial-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-                .testimonial-card { background: #1a1a1a; padding: 20px; border-radius: 12px; }
-                .testimonial-card p { font-style: italic; margin-bottom: 12px; color: #ccc; }
-                .testimonial-card span { color: #888; font-size: 14px; }
-                @media (max-width: 768px) { .plans-grid, .faq-grid, .testimonial-grid { grid-template-columns: 1fr; } }
-            `}</style>
-        </>
-    );
-}
+            {/* RIGHT: Code Editor */}
+            <div className="practice-panel">
+              <div className="panel-header">
+                <Code2 size={20} className="icon-code" />
+                <h2>Practice</h2>
+                <div className="language-selector">
+                  <Languages size={16} />
+                  <select
+                    value={practiceLanguage}
+                    onChange={(e) => {
+                      setPracticeLanguage(e.target.value);
+                      setCode(getCodeTemplate(e.target.value, problem?.question_text));
+                    }}
+                  >
+                    {languages.map(lang => <option key={lang} value={lang}>{lang}</option>)}
+                  </select>
+                </div>
+              </div>
 
-export default Payments;
+              <div className="problem-statement">
+                <h3>{problem?.question_text || problem?.title || "Problem not found"}</h3>
+                <div className="problem-meta">
+                  <span className="difficulty">{problem?.difficulty}</span>
+                  <span className="marks">{problem?.marks} marks</span>
+                </div>
+              </div>
+
+              <div className="code-editor">
+                <div className="editor-header">
+                  <span>{practiceLanguage} Editor</span>
+                  <button className="btn-copy" onClick={handleCopyCode}>
+                    {copied ? <Check size={16} /> : <Copy size={16} />}
+                    {copied ? "Copied!" : "Copy"}
+                  </button>
+                </div>
+                <textarea
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  className="code-textarea"
+                  spellCheck="false"
+                />
+              </div>
+
+              <div className="practice-actions">
+                <button className="btn-run">▶ Run Code</button>
+                <button className="btn-submit">✓ Submit</button>
+                <button className="btn-hint" onClick={() => navigate("/tasks")}>← Back</button>
+              </div>
+            </div>
+
+          </div>
+        </main>
+      </div>
+    </>
+  );
+}
