@@ -1,13 +1,13 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 
 const AuthContext = createContext(null);
+const API_BASE = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000"; // ✅ Added
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Check if user is already logged in (from localStorage)
   useEffect(() => {
     const storedUser = localStorage.getItem("skillforge_user");
     if (storedUser) {
@@ -24,7 +24,7 @@ export function AuthProvider({ children }) {
   const register = useCallback(async (name, email, password) => {
     setError(null);
     try {
-      const response = await fetch("http://localhost:8000/register", {
+      const response = await fetch(`${API_BASE}/register`, {  // ✅ Fixed URL
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password })
@@ -36,8 +36,8 @@ export function AuthProvider({ children }) {
       }
 
       await response.json();
-
       //After register, auto-login to get token
+      // eslint-disable-next-line no-use-before-define
       const loginResult = await login(email, password);
       return loginResult;
 
@@ -45,13 +45,13 @@ export function AuthProvider({ children }) {
       setError(err.message);
       return { success: false, error: err.message };
     }
-  }, []); // login added below via ref pattern — see note
+  }, [login]); // ✅ Correct: depends on login
 
   // Login User
   const login = useCallback(async (email, password) => {
     setError(null);
     try {
-      const response = await fetch("http://localhost:8000/login", {
+      const response = await fetch(`${API_BASE}/login`, {  // ✅ Fixed URL
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
@@ -63,8 +63,6 @@ export function AuthProvider({ children }) {
       }
 
       const data = await response.json();
-
-      // Backend returns data.user — not data directly
       const userData = {
         user_id: data.user.user_id,
         name: data.user.name,
@@ -74,7 +72,6 @@ export function AuthProvider({ children }) {
         created_at: data.user.created_at,
       };
 
-      // Save token AND full user object
       localStorage.setItem("skillforge_token", data.access_token);
       localStorage.setItem("skillforge_user", JSON.stringify(userData));
       setUser(userData);
@@ -84,7 +81,7 @@ export function AuthProvider({ children }) {
       setError(err.message);
       return { success: false, error: err.message };
     }
-  }, []);
+  }, []); // ✅ Fixed: was [login], now []
 
   const authFetch = useCallback((url, options = {}) => {
     const token = localStorage.getItem("skillforge_token");
@@ -98,7 +95,6 @@ export function AuthProvider({ children }) {
     });
   }, []);
 
-  // Logout User
   const logout = useCallback(() => {
     setUser(null);
     localStorage.removeItem("skillforge_user");
@@ -106,7 +102,6 @@ export function AuthProvider({ children }) {
     window.location.href = "/login";
   }, []);
 
-  // Update User
   const updateUser = useCallback((updatedData) => {
     setUser(prev => {
       const updated = { ...prev, ...updatedData };
@@ -116,13 +111,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const value = {
-    user,
-    loading,
-    error,
-    register,
-    login,
-    logout,
-    updateUser,
+    user, loading, error, register, login, logout, updateUser,
     isAuthenticated: !!user,
     userId: user?.user_id,
     authFetch

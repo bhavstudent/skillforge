@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: student-ai-backend
+    env: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: backend/Procfile
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - fromDatabase:
+          name: student-ai-db
+          property: connectionString
+  - type: web
+    name: student-ai-frontend
+    env: static
+    buildCommand: cd student-ai && npm install && npm run build
+    staticPublishPath: student-ai/build
+  - type: pgsql
+    name: student-ai-db
+    diskSizeMiB: 512
